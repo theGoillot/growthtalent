@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Companies ──────────────────────────────────────────────────
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  domain    String?  @unique
+  website   String?
+  logoUrl   String?
+  about     String?
+  size      String?  // "1-10", "11-50", "51-200", "201-500", "500+"
+  industry  String?
+  market    Market   @default(USA)
+  isClaimed Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobs   Job[]
+  claims CompanyClaim[]
+  boosts Boost[]
+
+  @@index([market])
+  @@index([name])
+}
+
+// ── Jobs ───────────────────────────────────────────────────────
+
+model Job {
+  id            String     @id @default(cuid())
+  title         String
+  slug          String
+  description   String?
+  category      String     // from taxonomy: growth-marketing, product-marketing, etc.
+  seniority     Seniority  @default(MID)
+  contractType  Contract   @default(FULL_TIME)
+  remote        Remote     @default(ONSITE)
+  city          String?
+  country       String?
+  location      String?    // display string: "Paris, France" or "Remote"
+  salaryMin     Int?
+  salaryMax     Int?
+  salaryCurrency String?   // USD, EUR, BRL
+  applyUrl      String?    // external ATS link
+  sourceUrl     String?    @unique // original scraped URL (dedup key)
+  source        String?    // "mantiks" | "apify" | "manual"
+  market        Market     @default(USA)
+
+  status        JobStatus  @default(PENDING_REVIEW)
+  moderationScore Float?
+  moderationFlags String[]
+  moderationNote  String?
+
+  isBoosted     Boolean    @default(false)
+  boostExpiresAt DateTime?
+
+  companyId     String
+  company       Company    @relation(fields: [companyId], references: [id])
+
+  postedAt      DateTime   @default(now())
+  expiresAt     DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  applications  Application[]
+
+  @@unique([slug, companyId])
+  @@index([market, status])
+  @@index([category, market])
+  @@index([city, market])
+  @@index([status])
+  @@index([companyId])
+}
+
+// ── Candidates ─────────────────────────────────────────────────
+
+model Candidate {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  avatarUrl     String?
+  linkedinSub   String?  @unique // LinkedIn OIDC sub claim
+
+  // Profile completion fields
+  currentTitle  String?
+  seniority     Seniority?
+  city          String?
+  country       String?
+  salaryMin     Int?
+  salaryMax     Int?
+  salaryCurrency String?
+  tools         String[] // ["HubSpot", "Google Ads", "Mixpanel"]
+  teamScope     String?  // "solo", "1-5", "5-15", "15-50", "50+"
+  markets       Market[] // interested markets
+  resumeUrl     String?
+  isProfileComplete Boolean @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  applications  Application[]
+}
+
+// ── Applications ───────────────────────────────────────────────
+
+model Application {
+  id          String   @id @default(cuid())
+  candidateId String
+  jobId       String
+  status      ApplicationStatus @default(APPLIED)
+
+  candidate   Candidate @relation(fields: [candidateId], references: [id])
+  job         Job       @relation(fields: [jobId], references: [id])
+
+  createdAt   DateTime  @default(now())
+
+  @@unique([candidateId, jobId])
+  @@index([jobId])
+  @@index([candidateId])
+}
+
+// ── Company Claims ─────────────────────────────────────────────
+
+model CompanyClaim {
+  id         String      @id @default(cuid())
+  companyId  String
+  email      String
+  token      String      @unique
+  status     ClaimStatus @default(PENDING)
+
+  company    Company     @relation(fields: [companyId], references: [id])
+
+  createdAt  DateTime    @default(now())
+  verifiedAt DateTime?
+
+  @@index([companyId])
+}
+
+// ── Boosts (Revenue) ───────────────────────────────────────────
+
+model Boost {
+  id                String   @id @default(cuid())
+  companyId         String
+  stripeSessionId   String?  @unique
+  stripeCustomerId  String?
+  amount            Int      // cents
+  currency          String   // USD, EUR, BRL
+  market            Market
+
+  isActive          Boolean  @default(false)
+  startsAt          DateTime?
+  expiresAt         DateTime?
+
+  company           Company  @relation(fields: [companyId], references: [id])
+
+  createdAt         DateTime @default(now())
+
+  @@index([companyId])
+}
+
+// ── Email Subscribers ──────────────────────────────────────────
+
+model EmailSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  market    Market?
+  source    String?  // "footer", "homepage", "job-page"
+
+  createdAt DateTime @default(now())
+}
+
+// ── Enums ──────────────────────────────────────────────────────
+
+enum Market {
+  USA
+  FRANCE
+  LATAM
+}
+
+enum Seniority {
+  INTERN
+  JUNIOR
+  MID
+  SENIOR
+  LEAD
+  MANAGER
+  DIRECTOR
+  VP
+  C_LEVEL
+}
+
+enum Contract {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
+}
+
+enum Remote {
+  ONSITE
+  HYBRID
+  REMOTE
+  REMOTE_FRANCE
+  REMOTE_EU
+  REMOTE_US
+  REMOTE_WORLD
+}
+
+enum JobStatus {
+  PENDING_REVIEW
+  APPROVED
+  FLAGGED
+  REJECTED
+  EXPIRED
+}
+
+enum ApplicationStatus {
+  APPLIED
+  VIEWED
+  SHORTLISTED
+  REJECTED
+}
+
+enum ClaimStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
