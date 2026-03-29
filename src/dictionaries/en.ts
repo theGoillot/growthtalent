@@ -88,4 +88,17 @@ export const en = {
   },
 } as const;
 
-export type Dictionary = typeof en;
+export interface Dictionary {
+  locale: string;
+  market: string;
+  jobsPath: string;
+  companiesPath: string;
+  nav: { jobs: string; companies: string; postJob: string; signIn: string };
+  hero: { title: string; subtitle: string; cta: string };
+  job: Record<string, string>;
+  filters: Record<string, string>;
+  company: Record<string, string>;
+  footer: Record<string, string>;
+  categories: Record<string, string>;
+  seniority: Record<string, string>;
+}
