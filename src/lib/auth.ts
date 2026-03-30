@@ -13,40 +13,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/signin",
   },
+  debug: process.env.NODE_ENV === "development",
   callbacks: {
-    async signIn({ user, profile }) {
+    async signIn({ user }) {
       if (!user.email) return false;
 
-      // Upsert candidate on login
-      const linkedinSub = (profile as Record<string, unknown>)?.sub as string | undefined;
-
-      await db.candidate.upsert({
-        where: { email: user.email },
-        update: {
-          name: user.name ?? undefined,
-          avatarUrl: user.image ?? undefined,
-          ...(linkedinSub && { linkedinSub }),
-        },
-        create: {
-          email: user.email,
-          name: user.name,
-          avatarUrl: user.image,
-          linkedinSub: linkedinSub ?? undefined,
-        },
-      });
+      try {
+        await db.candidate.upsert({
+          where: { email: user.email },
+          update: {
+            name: user.name ?? undefined,
+            avatarUrl: user.image ?? undefined,
+          },
+          create: {
+            email: user.email,
+            name: user.name,
+            avatarUrl: user.image,
+          },
+        });
+      } catch (error) {
+        console.error("Failed to upsert candidate:", error);
+        // Don't block sign-in if DB fails
+      }
 
       return true;
     },
-    async jwt({ token, user, profile }) {
+    async jwt({ token, user }) {
       if (user?.email) {
-        // First login — fetch candidateId
-        const candidate = await db.candidate.findUnique({
-          where: { email: user.email },
-          select: { id: true, isProfileComplete: true },
-        });
-        if (candidate) {
-          token.candidateId = candidate.id;
-          token.isProfileComplete = candidate.isProfileComplete;
+        try {
+          const candidate = await db.candidate.findUnique({
+            where: { email: user.email },
+            select: { id: true, isProfileComplete: true },
+          });
+          if (candidate) {
+            token.candidateId = candidate.id;
+            token.isProfileComplete = candidate.isProfileComplete;
+          }
+        } catch (error) {
+          console.error("Failed to fetch candidate for JWT:", error);
         }
       }
       return token;
