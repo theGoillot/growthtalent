@@ -3,17 +3,43 @@ import LinkedIn from "next-auth/providers/linkedin";
 import { db } from "@/lib/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     LinkedIn({
       clientId: process.env.AUTH_LINKEDIN_ID!,
       clientSecret: process.env.AUTH_LINKEDIN_SECRET!,
+      // Force authorization params — fixes PKCE/state issues
+      authorization: {
+        params: {
+          scope: "openid profile email",
+        },
+      },
     }),
   ],
   secret: process.env.AUTH_SECRET,
   pages: {
     signIn: "/auth/signin",
   },
-  debug: process.env.NODE_ENV === "development",
+  cookies: {
+    pkceCodeVerifier: {
+      name: "next-auth.pkce.code_verifier",
+      options: {
+        httpOnly: true,
+        sameSite: "none",
+        path: "/",
+        secure: true,
+      },
+    },
+    state: {
+      name: "next-auth.state",
+      options: {
+        httpOnly: true,
+        sameSite: "none",
+        path: "/",
+        secure: true,
+      },
+    },
+  },
   callbacks: {
     async signIn({ user }) {
       if (!user.email) return false;
@@ -33,7 +59,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
       } catch (error) {
         console.error("Failed to upsert candidate:", error);
-        // Don't block sign-in if DB fails
       }
 
       return true;
