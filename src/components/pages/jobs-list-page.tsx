@@ -2,7 +2,6 @@ import type { Locale } from "@/dictionaries";
 import { getDictionary } from "@/dictionaries";
 import { getJobs, getCategoriesWithCount } from "@/lib/queries";
 import { JobCard } from "@/components/job-card";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { categoryUrl } from "@/lib/seo";
@@ -53,39 +52,41 @@ export async function JobsListPage({
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
       {/* Title */}
-      <div className="mb-8">
-        <h1 className="font-display text-4xl font-bold">
+      <div className="mb-10">
+        <h1 className="font-display text-5xl font-bold md:text-6xl">
           {categoryLabel ?? dict.nav.jobs}
         </h1>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-3 text-gray-500">
           {total} {total === 1 ? "position" : "positions"} {categoryLabel ? `in ${categoryLabel}` : "available"}
         </p>
       </div>
 
       <div className="flex gap-8">
         {/* Sidebar: Categories */}
-        <aside className="hidden w-56 shrink-0 lg:block">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        <aside className="hidden w-60 shrink-0 lg:block">
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-400">
             {dict.filters.allCategories}
           </h3>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <Link
               href={`/${jobsPath}`}
-              className={`block rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                !category ? "bg-gt-purple/15 font-medium" : "text-muted-foreground hover:bg-gray-100"
+              className={`flex items-center justify-between rounded-xl px-3.5 py-2 text-sm transition-all ${
+                !category ? "bg-gt-black text-white font-medium" : "text-gray-500 hover:bg-gray-100"
               }`}
             >
-              {dict.job.allJobs} ({categories.reduce((sum, c) => sum + c.count, 0)})
+              <span>{dict.job.allJobs}</span>
+              <span className={`text-xs ${!category ? "text-white/60" : "text-gray-400"}`}>{categories.reduce((sum, c) => sum + c.count, 0)}</span>
             </Link>
             {categories.map((c) => (
               <Link
                 key={c.category}
                 href={`/${jobsPath}/${c.category}`}
-                className={`block rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                  c.category === category ? "bg-gt-purple/15 font-medium" : "text-muted-foreground hover:bg-gray-100"
+                className={`flex items-center justify-between rounded-xl px-3.5 py-2 text-sm transition-all ${
+                  c.category === category ? "bg-gt-black text-white font-medium" : "text-gray-500 hover:bg-gray-100"
                 }`}
               >
-                {dict.categories[c.category] ?? c.category} ({c.count})
+                <span>{dict.categories[c.category] ?? c.category}</span>
+                <span className={`text-xs ${c.category === category ? "text-white/60" : "text-gray-400"}`}>{c.count}</span>
               </Link>
             ))}
           </div>
@@ -94,11 +95,11 @@ export async function JobsListPage({
         {/* Job list */}
         <div className="flex-1 space-y-3">
           {/* Mobile category pills */}
-          <div className="mb-4 flex flex-wrap gap-2 lg:hidden">
+          <div className="mb-6 flex flex-wrap gap-2 lg:hidden">
             <Link
               href={`/${jobsPath}`}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${
-                !category ? "bg-gt-black text-white" : "border bg-white"
+              className={`rounded-full border-2 px-3.5 py-1 text-xs font-bold transition-all ${
+                !category ? "border-gt-black bg-gt-black text-white" : "border-black/10 bg-white hover:border-gt-black"
               }`}
             >
               All
@@ -107,8 +108,8 @@ export async function JobsListPage({
               <Link
                 key={c.category}
                 href={`/${jobsPath}/${c.category}`}
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  c.category === category ? "bg-gt-black text-white" : "border bg-white"
+                className={`rounded-full border-2 px-3.5 py-1 text-xs font-bold transition-all ${
+                  c.category === category ? "border-gt-black bg-gt-black text-white" : "border-black/10 bg-white hover:border-gt-black"
                 }`}
               >
                 {dict.categories[c.category] ?? c.category}
@@ -117,13 +118,15 @@ export async function JobsListPage({
           </div>
 
           {/* Seniority filter pills */}
-          <div className="mb-4 flex flex-wrap gap-2">
+          <div className="mb-6 flex flex-wrap gap-2">
             {["JUNIOR", "MID", "SENIOR", "LEAD", "VP"].map((s) => (
               <Link
                 key={s}
                 href={`/${jobsPath}${category ? `/${category}` : ""}?seniority=${s}`}
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  searchParams.seniority === s ? "bg-gt-purple text-gt-black" : "border bg-white text-muted-foreground hover:bg-gray-50"
+                className={`rounded-full border-2 px-3.5 py-1 text-xs font-bold transition-all ${
+                  searchParams.seniority === s
+                    ? "border-gt-purple bg-gt-purple text-gt-black"
+                    : "border-black/10 bg-white text-gray-500 hover:border-gt-purple"
                 }`}
               >
                 {dict.seniority[s] ?? s}
@@ -131,8 +134,10 @@ export async function JobsListPage({
             ))}
             <Link
               href={`/${jobsPath}${category ? `/${category}` : ""}?remote=true`}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${
-                searchParams.remote === "true" ? "bg-gt-purple text-gt-black" : "border bg-white text-muted-foreground hover:bg-gray-50"
+              className={`rounded-full border-2 px-3.5 py-1 text-xs font-bold transition-all ${
+                searchParams.remote === "true"
+                  ? "border-gt-purple bg-gt-purple text-gt-black"
+                  : "border-black/10 bg-white text-gray-500 hover:border-gt-purple"
               }`}
             >
               {dict.filters.remote}

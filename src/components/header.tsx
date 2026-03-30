@@ -11,22 +11,28 @@ const MARKET_LINKS: { locale: Locale; flag: string; label: string; jobsPath: str
 
 export function Header({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-black/5 bg-white">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-3">
-          <Image src="/Logo_GT.svg" alt="Growth.Talent" width={32} height={32} />
-          <span className="font-display text-xl font-bold tracking-tight">Growth.Talent</span>
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5">
+          <Image src="/Logo_GT.svg" alt="Growth.Talent" width={30} height={30} />
+          <span className="text-lg tracking-tight">
+            <span className="font-extrabold">Growth</span>
+            <span className="font-extrabold">.</span>
+            <span className="font-light">Talent</span>
+          </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        {/* Market Switcher */}
+        <nav className="hidden items-center gap-1 rounded-full border border-black/10 bg-gray-50/80 p-1 md:flex">
           {MARKET_LINKS.map((m) => (
             <Link
               key={m.locale}
               href={m.jobsPath}
-              className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
+              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-all ${
                 m.locale === locale
-                  ? "bg-gt-purple/20 font-medium text-gt-black"
-                  : "text-muted-foreground hover:bg-gray-100 hover:text-foreground"
+                  ? "bg-gt-black text-white shadow-sm"
+                  : "text-gray-500 hover:text-gt-black"
               }`}
             >
               {m.flag} {m.label}
@@ -34,16 +40,17 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: Locale }) {
           ))}
         </nav>
 
+        {/* Actions */}
         <div className="flex items-center gap-3">
           <Link
             href={`/${dict.companiesPath}`}
-            className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
+            className="hidden text-sm font-medium text-gray-500 transition-colors hover:text-gt-black sm:block"
           >
             {dict.nav.companies}
           </Link>
           <Link
             href="/post-job"
-            className="rounded-full bg-gt-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gt-black/85"
+            className="rounded-full border-2 border-gt-black bg-gt-black px-5 py-2 text-sm font-bold text-white transition-all hover:bg-white hover:text-gt-black"
           >
             {dict.nav.postJob}
           </Link>
