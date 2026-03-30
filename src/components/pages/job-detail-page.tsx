@@ -3,6 +3,7 @@ import { getDictionary } from "@/dictionaries";
 import { getJobBySlug, getSimilarJobs } from "@/lib/queries";
 import { jobJsonLd, hreflangLinks, jobUrl } from "@/lib/seo";
 import { JobCard } from "@/components/job-card";
+import { ApplyButton } from "@/components/apply-button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -117,20 +118,12 @@ export async function JobDetailPage({
 
         {/* Apply Button */}
         <div className="mt-6 flex gap-3">
-          {job.applyUrl ? (
-            <a
-              href={job.applyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex rounded-full bg-gt-black px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-gt-black/85"
-            >
-              {dict.job.apply} &rarr;
-            </a>
-          ) : (
-            <button className="rounded-full bg-gt-black px-8 py-3 text-sm font-semibold text-white">
-              {dict.job.apply}
-            </button>
-          )}
+          <ApplyButton
+            jobId={job.id}
+            applyUrl={job.applyUrl}
+            label={dict.job.apply}
+            loginLabel={dict.job.applyLogin}
+          />
         </div>
 
         {/* Description */}
