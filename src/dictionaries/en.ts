@@ -12,8 +12,8 @@ export const en = {
   },
 
   hero: {
-    title: "Growth careers that matter",
-    subtitle: "Find your next growth marketing role at the best startups and scale-ups worldwide.",
+    title: "Growth jobs.\nSalary shown.\nNo noise.",
+    subtitle: "The #1 job board for growth professionals in the US. Top startups, real salaries, zero fluff.",
     cta: "Browse Jobs",
   },
 

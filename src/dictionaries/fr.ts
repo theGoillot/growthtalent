@@ -14,8 +14,8 @@ export const fr: Dictionary = {
   },
 
   hero: {
-    title: "Des carri\u00e8res growth qui comptent",
-    subtitle: "Trouvez votre prochain poste en growth marketing dans les meilleures startups et scale-ups.",
+    title: "Vivons le\ngrowth\npleinement",
+    subtitle: "Le mouvement qui fait briller les carri\u00e8res growth. Les meilleures offres en France, salaires affich\u00e9s, sans d\u00e9tour.",
     cta: "Voir les offres",
   },
 

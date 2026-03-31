@@ -14,8 +14,8 @@ export const es: Dictionary = {
   },
 
   hero: {
-    title: "Carreras growth que importan",
-    subtitle: "Encuentra tu pr\u00f3ximo rol en growth marketing en las mejores startups y scale-ups.",
+    title: "Tu pr\u00f3ximo\npaso en\ngrowth",
+    subtitle: "Empleos growth en las mejores startups de Latinoam\u00e9rica y empresas de EEUU y Europa que contratan remoto.",
     cta: "Ver empleos",
   },
 

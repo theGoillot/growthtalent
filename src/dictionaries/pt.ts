@@ -14,8 +14,8 @@ export const pt: Dictionary = {
   },
 
   hero: {
-    title: "Carreiras growth que importam",
-    subtitle: "Encontre seu pr\u00f3ximo cargo em growth marketing nas melhores startups e scale-ups.",
+    title: "Carreiras\ngrowth que\nimportam",
+    subtitle: "Vagas growth nas melhores startups do Brasil e empresas internacionais com trabalho remoto.",
     cta: "Ver vagas",
   },
 
