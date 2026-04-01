@@ -20,6 +20,21 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.growthtalent.org"),
 };
 
+const websiteJsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Growth.Talent",
+  url: "https://www.growthtalent.org",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://www.growthtalent.org/jobs?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,6 +42,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("h-full", inter.variable)}>
+      <head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: websiteJsonLd }} />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>
       </body>

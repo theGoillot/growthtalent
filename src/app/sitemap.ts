@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getAllJobSlugs, getAllCompanySlugs } from "@/lib/queries";
+import { getAllJobSlugs, getAllCompanySlugs, getCitiesWithCount } from "@/lib/queries";
 import { CATEGORIES } from "@/lib/categories";
 import { CONTENT_SLUGS } from "@/lib/content";
 
@@ -19,8 +19,16 @@ const LOCALE_COMPANIES: Record<string, string> = {
   LATAM: "empresas",
 };
 
+function cityToSlug(city: string) {
+  return city.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [jobs, companies] = await Promise.all([getAllJobSlugs(), getAllCompanySlugs()]);
+  const [jobs, companies, usCities] = await Promise.all([
+    getAllJobSlugs(),
+    getAllCompanySlugs(),
+    getCitiesWithCount("en"),
+  ]);
 
   const entries: MetadataRoute.Sitemap = [];
 
@@ -36,6 +44,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const jobsPath of ["jobs", "emplois", "empleos", "empregos"]) {
     for (const cat of CATEGORIES) {
       entries.push({ url: `${BASE}/${jobsPath}/${cat}`, changeFrequency: "daily", priority: 0.8 });
+    }
+  }
+
+  // City landing pages (category + city combos for top US cities)
+  const topCities = usCities.filter((c) => !["United States", "United Kingdom", "Brazil", "France", "Colombia"].includes(c.city));
+  for (const tc of topCities.slice(0, 15)) {
+    for (const cat of CATEGORIES) {
+      entries.push({
+        url: `${BASE}/jobs/${cat}/in/${cityToSlug(tc.city)}`,
+        changeFrequency: "weekly",
+        priority: 0.75,
+      });
     }
   }
 

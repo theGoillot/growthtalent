@@ -6,6 +6,8 @@ import { JobCard } from "@/components/job-card";
 import { ApplyButton } from "@/components/apply-button";
 import { CompanyLogo } from "@/components/company-logo";
 import { StickyApplyBar } from "@/components/sticky-apply-bar";
+import { ShareJob } from "@/components/share-job";
+import { JobAlertCta } from "@/components/job-alert-cta";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -144,8 +146,8 @@ export async function JobDetailPage({
           {job.isBoosted && <Badge className="bg-gt-yellow text-gt-black">Featured</Badge>}
         </div>
 
-        {/* Apply Button + Posted date */}
-        <div className="mt-6 flex items-center gap-4">
+        {/* Apply Button + Posted date + Share */}
+        <div className="mt-6 flex flex-wrap items-center gap-4">
           <ApplyButton
             jobId={job.id}
             applyUrl={job.applyUrl}
@@ -155,6 +157,9 @@ export async function JobDetailPage({
           <span className="text-sm text-muted-foreground">
             {dict.job.posted} {timeAgo(job.postedAt)}
           </span>
+          <div className="ml-auto">
+            <ShareJob title={job.title} company={job.company.name} />
+          </div>
         </div>
 
         {/* Description */}
@@ -213,6 +218,11 @@ export async function JobDetailPage({
               {job.company.website}
             </a>
           )}
+        </div>
+
+        {/* Job alert CTA */}
+        <div className="mt-8">
+          <JobAlertCta category={job.category} />
         </div>
 
         {/* Similar Jobs */}

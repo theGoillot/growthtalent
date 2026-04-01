@@ -1,6 +1,6 @@
 import type { Locale } from "@/dictionaries";
 import { getDictionary } from "@/dictionaries";
-import { getJobs, getCategoriesWithCount } from "@/lib/queries";
+import { getJobs, getCategoriesWithCount, getTopCities } from "@/lib/queries";
 import { JobCard } from "@/components/job-card";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -9,12 +9,17 @@ import { CATEGORY_SEO } from "@/lib/category-seo";
 import { SearchJobs } from "@/components/search-jobs";
 import { RELATED_CATEGORIES } from "@/lib/related-categories";
 
-export function generateJobsListMetadata(locale: Locale, category?: string): Metadata {
+function cityToSlug(city: string) {
+  return city.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+}
+
+export function generateJobsListMetadata(locale: Locale, category?: string, page?: number): Metadata {
   const dict = getDictionary(locale);
   const categoryLabel = category ? dict.categories[category] ?? category : null;
+  const currentPage = page ?? 1;
   const title = categoryLabel
-    ? `${categoryLabel} Jobs — Open Positions | Growth.Talent`
-    : `Growth Marketing Jobs | Growth.Talent`;
+    ? `${categoryLabel} Jobs — Open Positions${currentPage > 1 ? ` (Page ${currentPage})` : ""} | Growth.Talent`
+    : `Growth Marketing Jobs${currentPage > 1 ? ` (Page ${currentPage})` : ""} | Growth.Talent`;
 
   const description = categoryLabel
     ? `Browse ${categoryLabel} jobs with real salaries. No fluff, no ghost listings. Apply to top startups and scale-ups hiring ${categoryLabel} professionals.`
@@ -23,6 +28,8 @@ export function generateJobsListMetadata(locale: Locale, category?: string): Met
   return {
     title,
     description,
+    // noindex page 2+ to avoid duplicate content
+    ...(currentPage > 1 && { robots: { index: false, follow: true } }),
     alternates: {
       canonical: category ? categoryUrl(locale, category) : undefined,
     },
@@ -41,7 +48,7 @@ export async function JobsListPage({
   const dict = getDictionary(locale);
   const page = parseInt(searchParams.page ?? "1");
 
-  const [{ jobs, total, totalPages }, categories] = await Promise.all([
+  const [{ jobs, total, totalPages }, categories, topCities] = await Promise.all([
     getJobs({
       locale,
       category,
@@ -51,6 +58,7 @@ export async function JobsListPage({
       page,
     }),
     getCategoriesWithCount(locale),
+    category ? getTopCities(locale, 12) : Promise.resolve([]),
   ]);
 
   const categoryLabel = category ? dict.categories[category] ?? category : null;
@@ -146,12 +154,24 @@ export async function JobsListPage({
             ))}
           </div>
 
-          {/* Seniority filter pills */}
-          <div className="mb-6 flex flex-wrap gap-2">
+          {/* Seniority + remote filter pills */}
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            {(searchParams.seniority || searchParams.remote || searchParams.q) && (
+              <Link
+                href={`/${jobsPath}${category ? `/${category}` : ""}`}
+                className="rounded-full border-2 border-red-200 bg-red-50 px-3.5 py-1 text-xs font-bold text-red-600 transition-all hover:bg-red-100"
+              >
+                Clear filters &times;
+              </Link>
+            )}
             {["JUNIOR", "MID", "SENIOR", "LEAD", "VP"].map((s) => (
               <Link
                 key={s}
-                href={`/${jobsPath}${category ? `/${category}` : ""}?seniority=${s}`}
+                href={
+                  searchParams.seniority === s
+                    ? `/${jobsPath}${category ? `/${category}` : ""}`
+                    : `/${jobsPath}${category ? `/${category}` : ""}?seniority=${s}`
+                }
                 className={`rounded-full border-2 px-3.5 py-1 text-xs font-bold transition-all ${
                   searchParams.seniority === s
                     ? "border-gt-purple bg-gt-purple text-gt-black"
@@ -159,10 +179,15 @@ export async function JobsListPage({
                 }`}
               >
                 {dict.seniority[s] ?? s}
+                {searchParams.seniority === s && " \u00d7"}
               </Link>
             ))}
             <Link
-              href={`/${jobsPath}${category ? `/${category}` : ""}?remote=true`}
+              href={
+                searchParams.remote === "true"
+                  ? `/${jobsPath}${category ? `/${category}` : ""}`
+                  : `/${jobsPath}${category ? `/${category}` : ""}?remote=true`
+              }
               className={`rounded-full border-2 px-3.5 py-1 text-xs font-bold transition-all ${
                 searchParams.remote === "true"
                   ? "border-gt-purple bg-gt-purple text-gt-black"
@@ -170,6 +195,7 @@ export async function JobsListPage({
               }`}
             >
               {dict.filters.remote}
+              {searchParams.remote === "true" && " \u00d7"}
             </Link>
           </div>
 
@@ -260,6 +286,24 @@ export async function JobsListPage({
           </section>
         );
       })()}
+
+      {/* Browse by City — internal linking */}
+      {category && topCities.length > 0 && (
+        <section className="mt-12 border-t pt-10">
+          <h2 className="font-display text-xl font-bold">{categoryLabel} Jobs by City</h2>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {topCities.map((tc) => (
+              <Link
+                key={tc.city}
+                href={`/${jobsPath}/${category}/in/${cityToSlug(tc.city)}`}
+                className="rounded-full border-2 border-black/10 px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gt-black hover:text-gt-black"
+              >
+                {tc.city} ({tc.count})
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Related categories — internal linking */}
       {category && RELATED_CATEGORIES[category] && (

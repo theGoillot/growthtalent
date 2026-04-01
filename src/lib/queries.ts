@@ -157,6 +157,21 @@ export async function getCitiesWithCount(locale: Locale) {
     .map((j) => ({ city: j.city!, count: j._count }));
 }
 
+/** Get top cities for a market, for city landing pages */
+export async function getTopCities(locale: Locale, limit = 20) {
+  const market = marketForLocale(locale);
+  const jobs = await db.job.groupBy({
+    by: ["city"],
+    where: { market, status: "APPROVED", city: { not: null } },
+    _count: true,
+    orderBy: { _count: { city: "desc" } },
+    take: limit,
+  });
+  return jobs
+    .filter((j) => j.city && !["United States", "United Kingdom", "Brazil", "France", "Colombia"].includes(j.city!))
+    .map((j) => ({ city: j.city!, count: j._count }));
+}
+
 /** Get all approved job slugs for sitemap / generateStaticParams */
 export async function getAllJobSlugs() {
   return db.job.findMany({
