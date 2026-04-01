@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { CompanyLogo } from "@/components/company-logo";
+import { CATEGORY_SKILLS } from "@/lib/category-skills";
 import type { Dictionary } from "@/dictionaries";
 
 interface JobCardProps {
@@ -55,6 +56,7 @@ const REMOTE_SHORT: Record<string, string> = {
 
 export function JobCard({ job, dict, jobsPath }: JobCardProps) {
   const salary = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency);
+  const skills = CATEGORY_SKILLS[job.category] ?? [];
   const href = `/${jobsPath}/${job.category}/${job.company.slug}/${job.slug}`;
 
   return (
@@ -114,6 +116,20 @@ export function JobCard({ job, dict, jobsPath }: JobCardProps) {
               )}
               <span className="text-[11px] text-gray-400 ml-1">{timeAgo(job.postedAt)}</span>
             </div>
+
+            {/* Skills */}
+            {skills.length > 0 && (
+              <div className="mt-2 flex gap-1.5">
+                {skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

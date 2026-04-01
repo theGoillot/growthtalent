@@ -55,13 +55,55 @@ const EMPLOYMENT_TYPE: Record<string, string> = {
   INTERNSHIP: "INTERN",
 };
 
+/** Normalize messy country field to ISO 3166-1 alpha-2 */
+const US_STATES = new Set(["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"]);
+function normalizeCountry(raw: string | null, market?: string): string {
+  if (!raw) return market === "FRANCE" ? "FR" : market === "LATAM" ? "US" : "US";
+  const upper = raw.toUpperCase().trim();
+  if (US_STATES.has(upper)) return "US";
+  if (["US", "USA", "UNITED STATES"].includes(upper)) return "US";
+  if (["FR", "FRANCE"].includes(upper)) return "FR";
+  if (["BR", "BRAZIL"].includes(upper)) return "BR";
+  if (["MX", "MEXICO"].includes(upper)) return "MX";
+  if (["CO", "COLOMBIA"].includes(upper)) return "CO";
+  if (["CA", "CANADA"].includes(upper)) return "CA";
+  if (["GB", "UK", "UNITED KINGDOM"].includes(upper)) return "GB";
+  // If it looks like a metro area or city name, fall back to market
+  if (raw.includes("Metropolitan") || raw.includes("Area") || raw.includes("Greater")) {
+    return market === "FRANCE" ? "FR" : "US";
+  }
+  return raw.length === 2 ? raw : "US"; // trust 2-letter codes, else US
+}
+
+/** Map category slug → BLS occupational category */
+const OCCUPATIONAL_CATEGORY: Record<string, string> = {
+  "growth-marketing": "13-1161.00 Market Research Analysts and Marketing Specialists",
+  "product-marketing": "11-2021.00 Marketing Managers",
+  "demand-generation": "13-1161.00 Market Research Analysts and Marketing Specialists",
+  "growth-engineering": "15-1252.00 Software Developers",
+  "marketing-ops": "13-1161.00 Market Research Analysts and Marketing Specialists",
+  "content-marketing": "27-3043.00 Writers and Authors",
+  "performance-marketing": "13-1161.00 Market Research Analysts and Marketing Specialists",
+  "crm-lifecycle": "13-1161.00 Market Research Analysts and Marketing Specialists",
+  "seo": "15-1255.00 Web and Digital Interface Designers",
+  "data-analytics": "15-2051.00 Data Scientists",
+  "brand-marketing": "11-2021.00 Marketing Managers",
+  "social-media": "27-3031.00 Public Relations Specialists",
+  "partnerships": "11-2022.00 Sales Managers",
+  "head-of-growth": "11-2021.00 Marketing Managers",
+  "vp-marketing": "11-2021.00 Marketing Managers",
+  "cmo": "11-1011.00 Chief Executives",
+};
+
 /** Google Jobs JSON-LD for a job posting */
 export function jobJsonLd(job: {
   title: string;
   description: string | null;
+  category: string;
   location: string | null;
   city: string | null;
   country: string | null;
+  market: string;
   remote: string;
   contractType: string | null;
   salaryMin: number | null;
@@ -74,12 +116,17 @@ export function jobJsonLd(job: {
     name: string;
     website: string | null;
     logoUrl: string | null;
+    domain: string | null;
   };
 }) {
   const isRemote = job.remote !== "ONSITE" && job.remote !== "HYBRID";
+  const countryCode = normalizeCountry(job.country, job.market);
   const validThrough = job.expiresAt
     ? job.expiresAt.toISOString().split("T")[0]
     : new Date(job.postedAt.getTime() + 60 * 86400000).toISOString().split("T")[0]; // 60 days default
+
+  const logoUrl = job.company.logoUrl
+    || (job.company.domain ? `https://img.logo.dev/${job.company.domain}?token=pk_a8C5jGEYR3yhZaKC7wMuvA&size=128&retina=true` : undefined);
 
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -89,15 +136,17 @@ export function jobJsonLd(job: {
     datePosted: job.postedAt.toISOString().split("T")[0],
     validThrough,
     employmentType: EMPLOYMENT_TYPE[job.contractType ?? "FULL_TIME"] ?? "FULL_TIME",
+    occupationalCategory: OCCUPATIONAL_CATEGORY[job.category],
+    industry: job.company.website ? "Technology" : undefined,
     hiringOrganization: {
       "@type": "Organization",
       name: job.company.name,
       ...(job.company.website && { sameAs: job.company.website }),
-      ...(job.company.logoUrl && { logo: job.company.logoUrl }),
+      ...(logoUrl && { logo: logoUrl }),
     },
     jobLocationType: isRemote ? "TELECOMMUTE" : undefined,
     applicantLocationRequirements: isRemote
-      ? { "@type": "Country", name: job.country ?? "US" }
+      ? { "@type": "Country", name: countryCode }
       : undefined,
     jobLocation: !isRemote && job.city
       ? {
@@ -105,7 +154,7 @@ export function jobJsonLd(job: {
           address: {
             "@type": "PostalAddress",
             addressLocality: job.city,
-            addressCountry: job.country,
+            addressCountry: countryCode,
           },
         }
       : undefined,
