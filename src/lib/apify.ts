@@ -43,17 +43,33 @@ function isAgency(companyName: string): boolean {
 
 // ── Relevance check ─────────────────────────────────────
 
-const GROWTH_KEYWORDS = [
-  "growth", "marketing", "acquisition", "demand gen", "seo",
-  "performance", "paid", "crm", "lifecycle", "retention",
-  "product marketing", "content marketing", "brand marketing",
-  "outbound", "inbound", "analytics", "data", "revenue",
-  "go-to-market", "gtm", "community", "partnerships",
+// Title MUST contain one of these keywords (strict — description alone is not enough)
+const TITLE_KEYWORDS = [
+  "growth", "marketing", "seo", "acquisition", "demand gen",
+  "performance market", "paid media", "paid acquisition",
+  "crm", "lifecycle", "retention", "content market",
+  "brand market", "product market", "outbound", "inbound",
+  "head of digital", "head of dtc", "social media",
+  "community manager", "partnerships", "revenue market",
+  "go-to-market", "gtm", "analytics market",
 ];
 
-function isRelevantGrowthRole(title: string, description: string): boolean {
-  const text = `${title} ${description}`.toLowerCase();
-  return GROWTH_KEYWORDS.some((kw) => text.includes(kw));
+// These titles are NEVER growth roles even if keyword matches
+const EXCLUDE_TITLES = [
+  "software engineer", "data scientist", "ux designer", "ui designer",
+  "recruiter", "hr ", "human resource", "nurse", "teacher", "lawyer",
+  "attorney", "accountant", "mechanic", "chef", "nanny", "sitter",
+  "physiotherapist", "coach", "principal", "assistant professor",
+  "gallery assistant", "park naturalist", "security", "porter",
+  "casting", "buyer", "economist", "warehouse", "driver",
+];
+
+function isRelevantGrowthRole(title: string, _description: string): boolean {
+  const titleLower = title.toLowerCase();
+  // Exclude obvious non-growth roles first
+  if (EXCLUDE_TITLES.some((ex) => titleLower.includes(ex))) return false;
+  // Title must contain a growth keyword
+  return TITLE_KEYWORDS.some((kw) => titleLower.includes(kw));
 }
 
 // ── Transform LinkedIn → IngestPayload ──────────────────
