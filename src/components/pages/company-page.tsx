@@ -82,7 +82,7 @@ export async function CompanyPage({ locale, slug }: { locale: Locale; slug: stri
             company.jobs.map((job) => (
               <JobCard
                 key={job.id}
-                job={{ ...job, company: { name: company.name, slug: company.slug, logoUrl: company.logoUrl } }}
+                job={{ ...job, company: { name: company.name, slug: company.slug, logoUrl: company.logoUrl, domain: company.domain } }}
                 dict={dict}
                 jobsPath={dict.jobsPath}
               />

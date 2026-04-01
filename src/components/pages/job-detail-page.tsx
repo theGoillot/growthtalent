@@ -1,13 +1,24 @@
 import type { Locale } from "@/dictionaries";
 import { getDictionary } from "@/dictionaries";
 import { getJobBySlug, getSimilarJobs } from "@/lib/queries";
-import { jobJsonLd, hreflangLinks, jobUrl } from "@/lib/seo";
+import { jobJsonLd, breadcrumbJsonLd, hreflangLinks, jobUrl, categoryUrl } from "@/lib/seo";
 import { JobCard } from "@/components/job-card";
 import { ApplyButton } from "@/components/apply-button";
+import { CompanyLogo } from "@/components/company-logo";
+import { StickyApplyBar } from "@/components/sticky-apply-bar";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+
+function timeAgo(date: Date) {
+  const days = Math.floor((Date.now() - date.getTime()) / 86400000);
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+  return `${Math.floor(days / 30)} months ago`;
+}
 
 const REMOTE_LABELS: Record<string, string> = {
   REMOTE: "Remote",
@@ -30,10 +41,12 @@ export async function generateJobDetailMetadata(
   const salary = job.salaryMin && job.salaryMax && job.salaryCurrency
     ? `${(job.salaryMin / 1000).toFixed(0)}K-${(job.salaryMax / 1000).toFixed(0)}K ${job.salaryCurrency}`
     : "";
+  const loc = job.location ?? "";
+  const categoryLabel = job.category.replace(/-/g, " ");
 
   return {
-    title: `${job.title} at ${job.company.name}${salary ? ` (${salary})` : ""}`,
-    description: `${job.title} at ${job.company.name}. ${job.location ?? ""}. ${salary}. Apply now on Growth.Talent.`,
+    title: `${job.title} at ${job.company.name}${salary ? ` (${salary})` : ""} | Growth.Talent`,
+    description: `Apply for ${job.title} at ${job.company.name}${loc ? ` in ${loc}` : ""}. ${salary ? `Salary: ${salary}. ` : ""}${categoryLabel.charAt(0).toUpperCase() + categoryLabel.slice(1)} role with real salary data, no fluff.`,
     alternates: {
       canonical: jobUrl(locale, job.category, companySlug, jobSlug),
       languages: hreflangLinks(`${job.category}/${companySlug}/${jobSlug}`, locale),
@@ -63,12 +76,24 @@ export async function JobDetailPage({
       ? `${job.salaryCurrency === "EUR" ? "\u20ac" : job.salaryCurrency === "BRL" ? "R$" : "$"}${(job.salaryMin / 1000).toFixed(0)}K - ${job.salaryCurrency === "EUR" ? "\u20ac" : job.salaryCurrency === "BRL" ? "R$" : "$"}${(job.salaryMax / 1000).toFixed(0)}K`
       : null;
 
+  const BASE = "https://www.growthtalent.org";
+  const breadcrumbs = [
+    { name: dict.nav.jobs, url: `${BASE}/${dict.jobsPath}` },
+    { name: dict.categories[job.category] ?? job.category, url: categoryUrl(locale, job.category) },
+    { name: job.title, url: jobUrl(locale, job.category, companySlug, jobSlug) },
+  ];
+
   return (
     <>
-      {/* JSON-LD */}
+      {/* JSON-LD: JobPosting */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jobJsonLd(job) }}
+      />
+      {/* JSON-LD: BreadcrumbList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(breadcrumbs) }}
       />
 
       <div className="mx-auto max-w-4xl px-6 py-8">
@@ -87,9 +112,12 @@ export async function JobDetailPage({
 
         {/* Job Header */}
         <div className="flex items-start gap-5">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border bg-gray-50 text-2xl font-bold text-gray-400">
-            {job.company.name.charAt(0)}
-          </div>
+          <CompanyLogo
+            name={job.company.name}
+            logoUrl={job.company.logoUrl}
+            domain={job.company.domain}
+            size={64}
+          />
           <div className="flex-1">
             <h1 className="font-display text-3xl font-bold md:text-4xl">{job.title}</h1>
             <p className="mt-2 text-lg text-muted-foreground">
@@ -116,14 +144,17 @@ export async function JobDetailPage({
           {job.isBoosted && <Badge className="bg-gt-yellow text-gt-black">Featured</Badge>}
         </div>
 
-        {/* Apply Button */}
-        <div className="mt-6 flex gap-3">
+        {/* Apply Button + Posted date */}
+        <div className="mt-6 flex items-center gap-4">
           <ApplyButton
             jobId={job.id}
             applyUrl={job.applyUrl}
             label={dict.job.apply}
             loginLabel={dict.job.applyLogin}
           />
+          <span className="text-sm text-muted-foreground">
+            {dict.job.posted} {timeAgo(job.postedAt)}
+          </span>
         </div>
 
         {/* Description */}
@@ -138,13 +169,27 @@ export async function JobDetailPage({
           </div>
         </div>
 
+        {/* Second Apply CTA */}
+        <div className="mt-8 rounded-xl border-2 border-gt-black/10 bg-gray-50 p-6 text-center">
+          <p className="text-sm text-muted-foreground mb-3">Interested in this role?</p>
+          <ApplyButton
+            jobId={job.id}
+            applyUrl={job.applyUrl}
+            label={dict.job.apply}
+            loginLabel={dict.job.applyLogin}
+          />
+        </div>
+
         {/* Company Info */}
         <div className="mt-10 rounded-xl border bg-gt-cream/30 p-6">
           <h2 className="font-display text-xl font-bold">{dict.job.aboutCompany}</h2>
           <div className="mt-3 flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg border bg-white text-lg font-bold text-gray-400">
-              {job.company.name.charAt(0)}
-            </div>
+            <CompanyLogo
+              name={job.company.name}
+              logoUrl={job.company.logoUrl}
+              domain={job.company.domain}
+              size={48}
+            />
             <div>
               <Link
                 href={`/${dict.companiesPath}/${job.company.slug}`}
@@ -182,6 +227,15 @@ export async function JobDetailPage({
           </div>
         )}
       </div>
+
+      {/* Sticky mobile Apply bar */}
+      <StickyApplyBar
+        jobId={job.id}
+        applyUrl={job.applyUrl}
+        label={dict.job.apply}
+        loginLabel={dict.job.applyLogin}
+        salary={salary}
+      />
     </>
   );
 }

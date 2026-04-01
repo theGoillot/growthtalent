@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { CompanyLogo } from "@/components/company-logo";
 import type { Dictionary } from "@/dictionaries";
 
 interface JobCardProps {
@@ -19,6 +20,7 @@ interface JobCardProps {
       name: string;
       slug: string;
       logoUrl: string | null;
+      domain: string | null;
     };
   };
   dict: Dictionary;
@@ -75,10 +77,13 @@ export function JobCard({ job, dict, jobsPath }: JobCardProps) {
         )}
 
         <div className="flex items-start gap-4">
-          {/* Company initial */}
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-black/10 bg-gray-50 font-display text-lg font-bold text-gray-400">
-            {job.company.name.charAt(0)}
-          </div>
+          {/* Company logo */}
+          <CompanyLogo
+            name={job.company.name}
+            logoUrl={job.company.logoUrl}
+            domain={job.company.domain}
+            size={48}
+          />
 
           <div className="flex-1 min-w-0">
             {/* Title + Company */}

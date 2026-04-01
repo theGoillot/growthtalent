@@ -4,18 +4,25 @@ import { getJobs, getCategoriesWithCount } from "@/lib/queries";
 import { JobCard } from "@/components/job-card";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { categoryUrl } from "@/lib/seo";
+import { categoryUrl, jobListJsonLd, faqJsonLd } from "@/lib/seo";
+import { CATEGORY_SEO } from "@/lib/category-seo";
+import { SearchJobs } from "@/components/search-jobs";
+import { RELATED_CATEGORIES } from "@/lib/related-categories";
 
 export function generateJobsListMetadata(locale: Locale, category?: string): Metadata {
   const dict = getDictionary(locale);
   const categoryLabel = category ? dict.categories[category] ?? category : null;
   const title = categoryLabel
-    ? `${categoryLabel} ${dict.nav.jobs}`
-    : dict.nav.jobs;
+    ? `${categoryLabel} Jobs — Open Positions | Growth.Talent`
+    : `Growth Marketing Jobs | Growth.Talent`;
+
+  const description = categoryLabel
+    ? `Browse ${categoryLabel} jobs with real salaries. No fluff, no ghost listings. Apply to top startups and scale-ups hiring ${categoryLabel} professionals.`
+    : `The #1 job board for growth professionals. ${dict.hero.subtitle}`;
 
   return {
     title,
-    description: `Browse ${categoryLabel ?? "growth marketing"} jobs. ${dict.hero.subtitle}`,
+    description,
     alternates: {
       canonical: category ? categoryUrl(locale, category) : undefined,
     },
@@ -50,15 +57,37 @@ export async function JobsListPage({
   const jobsPath = dict.jobsPath;
 
   return (
+    <>
+    {/* JSON-LD: ItemList */}
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: jobListJsonLd(jobs, locale) }}
+    />
+    {/* JSON-LD: FAQPage (category pages only) */}
+    {category && CATEGORY_SEO[category] && (
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: faqJsonLd(CATEGORY_SEO[category].faq) }}
+      />
+    )}
     <div className="mx-auto max-w-7xl px-6 py-8">
       {/* Title */}
       <div className="mb-10">
         <h1 className="font-display text-5xl font-bold md:text-6xl">
-          {categoryLabel ?? dict.nav.jobs}
+          {categoryLabel ? `${categoryLabel} Jobs` : "All Growth Jobs"}
         </h1>
         <p className="mt-3 text-gray-500">
-          {total} {total === 1 ? "position" : "positions"} {categoryLabel ? `in ${categoryLabel}` : "available"}
+          {total} open {total === 1 ? "position" : "positions"}{categoryLabel ? ` in ${categoryLabel}` : ""} with real salaries
         </p>
+      </div>
+
+      {/* Search */}
+      <div className="mb-8">
+        <SearchJobs
+          jobsPath={jobsPath}
+          category={category}
+          placeholder={`Search ${categoryLabel ?? "growth"} jobs by title, company...`}
+        />
       </div>
 
       <div className="flex gap-8">
@@ -178,6 +207,78 @@ export async function JobsListPage({
           )}
         </div>
       </div>
+
+      {/* Programmatic SEO content — only on category pages, page 1 */}
+      {category && page === 1 && CATEGORY_SEO[category] && (() => {
+        const seo = CATEGORY_SEO[category];
+        return (
+          <section className="mt-16 border-t pt-12">
+            <h2 className="font-display text-3xl font-bold">
+              What is {categoryLabel}?
+            </h2>
+            <p className="mt-4 max-w-3xl text-gray-600 leading-relaxed">
+              {seo.what}
+            </p>
+
+            <div className="mt-10 grid gap-8 md:grid-cols-2">
+              {/* Salary range */}
+              <div className="rounded-2xl border-2 border-black/10 p-6">
+                <h3 className="font-display text-lg font-bold">{categoryLabel} Salary Range</h3>
+                <p className="mt-2 text-2xl font-bold text-green-700">{seo.salaryRange}</p>
+              </div>
+
+              {/* Top skills */}
+              <div className="rounded-2xl border-2 border-black/10 p-6">
+                <h3 className="font-display text-lg font-bold">Top Skills Required</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {seo.topSkills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-full bg-gt-purple-light/60 px-3 py-1 text-sm font-medium text-gt-black"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* FAQ */}
+            <div className="mt-10">
+              <h2 className="font-display text-2xl font-bold">
+                Frequently Asked Questions
+              </h2>
+              <div className="mt-6 space-y-6">
+                {seo.faq.map((item) => (
+                  <div key={item.q}>
+                    <h3 className="font-bold text-gt-black">{item.q}</h3>
+                    <p className="mt-1.5 text-gray-600 leading-relaxed">{item.a}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      })()}
+
+      {/* Related categories — internal linking */}
+      {category && RELATED_CATEGORIES[category] && (
+        <section className="mt-12 border-t pt-10">
+          <h2 className="font-display text-xl font-bold">Explore Related Categories</h2>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {RELATED_CATEGORIES[category].map((rc) => (
+              <Link
+                key={rc}
+                href={`/${jobsPath}/${rc}`}
+                className="rounded-full border-2 border-black/10 px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gt-black hover:text-gt-black"
+              >
+                {dict.categories[rc] ?? rc} Jobs
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
+    </>
   );
 }

@@ -46,6 +46,15 @@ export function companyUrl(locale: Locale, companySlug: string) {
   return `${BASE_URL}/${COMPANIES_PATH[locale]}/${companySlug}`;
 }
 
+/** Map Prisma Contract enum → schema.org employmentType */
+const EMPLOYMENT_TYPE: Record<string, string> = {
+  FULL_TIME: "FULL_TIME",
+  PART_TIME: "PART_TIME",
+  CONTRACT: "CONTRACTOR",
+  FREELANCE: "CONTRACTOR",
+  INTERNSHIP: "INTERN",
+};
+
 /** Google Jobs JSON-LD for a job posting */
 export function jobJsonLd(job: {
   title: string;
@@ -54,6 +63,7 @@ export function jobJsonLd(job: {
   city: string | null;
   country: string | null;
   remote: string;
+  contractType: string | null;
   salaryMin: number | null;
   salaryMax: number | null;
   salaryCurrency: string | null;
@@ -67,6 +77,9 @@ export function jobJsonLd(job: {
   };
 }) {
   const isRemote = job.remote !== "ONSITE" && job.remote !== "HYBRID";
+  const validThrough = job.expiresAt
+    ? job.expiresAt.toISOString().split("T")[0]
+    : new Date(job.postedAt.getTime() + 60 * 86400000).toISOString().split("T")[0]; // 60 days default
 
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -74,6 +87,8 @@ export function jobJsonLd(job: {
     title: job.title,
     description: job.description ?? `${job.title} at ${job.company.name}`,
     datePosted: job.postedAt.toISOString().split("T")[0],
+    validThrough,
+    employmentType: EMPLOYMENT_TYPE[job.contractType ?? "FULL_TIME"] ?? "FULL_TIME",
     hiringOrganization: {
       "@type": "Organization",
       name: job.company.name,
@@ -109,14 +124,58 @@ export function jobJsonLd(job: {
     };
   }
 
-  if (job.expiresAt) {
-    jsonLd.validThrough = job.expiresAt.toISOString().split("T")[0];
-  }
-
   if (job.applyUrl) {
     jsonLd.directApply = true;
   }
 
   // Remove undefined values
   return JSON.stringify(jsonLd, (_, v) => (v === undefined ? undefined : v));
+}
+
+/** BreadcrumbList JSON-LD */
+export function breadcrumbJsonLd(
+  items: { name: string; url: string }[]
+) {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  });
+}
+
+/** FAQPage JSON-LD for category pages */
+export function faqJsonLd(items: { q: string; a: string }[]) {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })),
+  });
+}
+
+/** ItemList JSON-LD for category/listing pages */
+export function jobListJsonLd(
+  jobs: { title: string; category: string; slug: string; company: { slug: string } }[],
+  locale: Locale
+) {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: jobs.slice(0, 20).map((job, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: jobUrl(locale, job.category, job.company.slug, job.slug),
+    })),
+  });
 }

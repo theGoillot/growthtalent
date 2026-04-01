@@ -82,7 +82,7 @@ export async function getSimilarJobs(jobId: string, category: string, market: st
       status: "APPROVED",
       id: { not: jobId },
     },
-    include: { company: { select: { name: true, slug: true, logoUrl: true } } },
+    include: { company: { select: { name: true, slug: true, logoUrl: true, domain: true } } },
     orderBy: { postedAt: "desc" },
     take: limit,
   });
