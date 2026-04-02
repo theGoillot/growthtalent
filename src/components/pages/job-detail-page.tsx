@@ -9,6 +9,8 @@ import { StickyApplyBar } from "@/components/sticky-apply-bar";
 import { ShareJob } from "@/components/share-job";
 import { JobAlertCta } from "@/components/job-alert-cta";
 import { cleanDescription } from "@/lib/clean-description";
+import { parseRichJob, richJobToText } from "@/lib/rich-job";
+import { RichJobDetail } from "@/components/rich-job-detail";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -79,6 +81,13 @@ export async function JobDetailPage({
       ? `${job.salaryCurrency === "EUR" ? "\u20ac" : job.salaryCurrency === "BRL" ? "R$" : "$"}${(job.salaryMin / 1000).toFixed(0)}K - ${job.salaryCurrency === "EUR" ? "\u20ac" : job.salaryCurrency === "BRL" ? "R$" : "$"}${(job.salaryMax / 1000).toFixed(0)}K`
       : null;
 
+  const richData = parseRichJob(job.description);
+
+  // For JSON-LD: use plain text version of rich data, or raw description
+  const jobForJsonLd = richData
+    ? { ...job, description: richJobToText(richData) }
+    : job;
+
   const BASE = "https://www.growthtalent.org";
   const breadcrumbs = [
     { name: dict.nav.jobs, url: `${BASE}/${dict.jobsPath}` },
@@ -91,7 +100,7 @@ export async function JobDetailPage({
       {/* JSON-LD: JobPosting */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jobJsonLd(job) }}
+        dangerouslySetInnerHTML={{ __html: jobJsonLd(jobForJsonLd) }}
       />
       {/* JSON-LD: BreadcrumbList */}
       <script
@@ -219,16 +228,22 @@ export async function JobDetailPage({
           )}
         </div>
 
-        {/* Description */}
+        {/* Description — Rich or Plain */}
         <div className="mt-10">
-          <h2 className="font-display text-xl font-bold">{dict.job.description}</h2>
-          <div className="prose prose-gray mt-4 max-w-none prose-h3:text-lg prose-h3:font-bold prose-h3:mt-6 prose-h3:mb-2 prose-li:my-0.5 prose-p:my-2">
-            {job.description ? (
-              <div dangerouslySetInnerHTML={{ __html: cleanDescription(job.description) }} />
-            ) : (
-              <p className="text-muted-foreground">No description provided.</p>
-            )}
-          </div>
+          {richData ? (
+            <RichJobDetail data={richData} dict={dict} />
+          ) : (
+            <>
+              <h2 className="font-display text-xl font-bold">{dict.job.description}</h2>
+              <div className="prose prose-gray mt-4 max-w-none prose-h3:text-lg prose-h3:font-bold prose-h3:mt-6 prose-h3:mb-2 prose-li:my-0.5 prose-p:my-2">
+                {job.description ? (
+                  <div dangerouslySetInnerHTML={{ __html: cleanDescription(job.description) }} />
+                ) : (
+                  <p className="text-muted-foreground">No description provided.</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Second Apply CTA */}
