@@ -35,14 +35,14 @@ function IconCross() {
 
 function SectionHeading({ icon, title, accent = "purple" }: { icon: React.ReactNode; title: string; accent?: "purple" | "yellow" | "pink" | "green" }) {
   const accentColors = {
-    purple: "bg-gt-purple",
-    yellow: "bg-gt-yellow",
-    pink: "bg-gt-pink",
-    green: "bg-emerald-400",
+    purple: "bg-gt-purple/20",
+    yellow: "bg-gt-yellow/30",
+    pink: "bg-gt-pink/25",
+    green: "bg-emerald-100",
   };
   return (
     <div className="flex items-center gap-4 mb-8">
-      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accentColors[accent]}/20 text-gt-black`}>
+      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl text-gt-black ${accentColors[accent]}`}>
         {icon}
       </div>
       <div>
@@ -54,10 +54,14 @@ function SectionHeading({ icon, title, accent = "purple" }: { icon: React.ReactN
 
 // ── Numbered Item — for objectives lists ────────────────────
 
-function NumberedItem({ num, children, color = "gt-purple" }: { num: number; children: React.ReactNode; color?: string }) {
+function NumberedItem({ num, children, variant = "yellow" }: { num: number; children: React.ReactNode; variant?: "yellow" | "purple" }) {
+  const styles = {
+    yellow: "bg-gt-yellow/20 text-gt-black",
+    purple: "bg-gt-purple/15 text-gt-black",
+  };
   return (
-    <div className="flex gap-4 items-start group">
-      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-${color}/10 text-xs font-bold text-${color} mt-0.5 transition-colors group-hover:bg-${color}/20`}>
+    <div className="flex gap-4 items-start">
+      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold mt-0.5 ${styles[variant]}`}>
         {num}
       </div>
       <p className="text-[15px] leading-relaxed text-gray-700">{children}</p>
@@ -76,10 +80,10 @@ export function RichJobDetail({ data }: { data: RichJob; dict: Dictionary }) {
         {data.tags.map((tag, i) => {
           // Alternate between brand colors for visual variety
           const colors = [
-            "border-gt-purple/30 bg-gt-purple/8 text-gt-black",
-            "border-gt-yellow/40 bg-gt-yellow/15 text-gt-black",
-            "border-gt-pink/30 bg-gt-pink/12 text-gt-black",
-            "border-gt-cream bg-gt-cream/60 text-gt-black",
+            "border-gt-purple/30 bg-gt-purple/10 text-gt-black",
+            "border-gt-yellow/40 bg-gt-yellow/20 text-gt-black",
+            "border-gt-pink/30 bg-gt-pink/15 text-gt-black",
+            "border-gt-cream bg-gt-cream/50 text-gt-black",
           ];
           return (
             <span
@@ -113,7 +117,7 @@ export function RichJobDetail({ data }: { data: RichJob; dict: Dictionary }) {
                 </div>
                 <div className="space-y-4">
                   {data.objectives3m.map((obj, i) => (
-                    <NumberedItem key={i} num={i + 1}>{obj}</NumberedItem>
+                    <NumberedItem key={i} num={i + 1} variant="yellow">{obj}</NumberedItem>
                   ))}
                 </div>
               </div>
@@ -126,7 +130,7 @@ export function RichJobDetail({ data }: { data: RichJob; dict: Dictionary }) {
                 </div>
                 <div className="space-y-4">
                   {data.objectives6m.map((obj, i) => (
-                    <NumberedItem key={i} num={i + 1} color="gt-purple">{obj}</NumberedItem>
+                    <NumberedItem key={i} num={i + 1} variant="purple">{obj}</NumberedItem>
                   ))}
                 </div>
               </div>
