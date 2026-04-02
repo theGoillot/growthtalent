@@ -109,8 +109,97 @@ export async function JobDetailPage({
         dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(breadcrumbs) }}
       />
 
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-gt-cream via-white to-gt-purple/10">
+        {/* Decorative circles */}
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gt-purple/8 blur-3xl" />
+        <div className="absolute -left-10 bottom-0 h-48 w-48 rounded-full bg-gt-yellow/15 blur-3xl" />
+        <div className="absolute right-1/4 bottom-0 h-32 w-32 rounded-full bg-gt-pink/10 blur-2xl" />
+
+        <div className="relative mx-auto max-w-[52rem] px-6 pb-10 pt-8 md:pb-14 md:pt-10">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-[13px] text-gray-400">
+            <Link href={`/${dict.jobsPath}`} className="transition-colors hover:text-gt-black">
+              {dict.nav.jobs}
+            </Link>
+            <span aria-hidden="true" className="text-gray-300">/</span>
+            <Link href={`/${dict.jobsPath}/${job.category}`} className="transition-colors hover:text-gt-black">
+              {dict.categories[job.category] ?? job.category}
+            </Link>
+            <span aria-hidden="true" className="text-gray-300">/</span>
+            <span className="text-gray-600 font-medium" aria-current="page">{job.title}</span>
+          </nav>
+
+          {/* Job Header */}
+          <header className="flex items-start gap-6">
+            <CompanyLogo
+              name={job.company.name}
+              logoUrl={job.company.logoUrl}
+              domain={job.company.domain}
+              size={80}
+            />
+            <div className="flex-1">
+              <h1 className="font-display text-[2.25rem] font-bold leading-[1.15] tracking-tight md:text-[2.75rem]" itemProp="title">{job.title}</h1>
+              <p className="mt-3 text-lg text-gray-500">
+                <Link
+                  href={`/${dict.companiesPath}/${job.company.slug}`}
+                  className="font-semibold text-gt-black transition-colors hover:text-gt-purple"
+                  itemProp="hiringOrganization"
+                >
+                  {job.company.name}
+                </Link>
+                {job.location && <span className="text-gray-300"> &bull; </span>}
+                {job.location && <span>{job.location}</span>}
+              </p>
+            </div>
+          </header>
+
+          {/* Quick Facts Bar */}
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-white/80 border border-gt-purple/20 px-3.5 py-1 text-[12px] font-bold text-gt-black backdrop-blur-sm">
+              {dict.categories[job.category] ?? job.category}
+            </span>
+            <span className="rounded-full bg-white/80 border border-gt-pink/25 px-3.5 py-1 text-[12px] font-bold text-gt-black backdrop-blur-sm">
+              {dict.seniority[job.seniority] ?? job.seniority}
+            </span>
+            <span className="rounded-full bg-white/80 border border-gt-cream px-3.5 py-1 text-[12px] font-bold text-gt-black backdrop-blur-sm">
+              {REMOTE_LABELS[job.remote] ?? job.remote}
+            </span>
+            <span className="rounded-full bg-white/80 border border-gray-200 px-3.5 py-1 text-[12px] font-bold text-gt-dark backdrop-blur-sm">
+              {job.contractType?.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) ?? "Full-time"}
+            </span>
+            {salary && (
+              <span className="rounded-full bg-emerald-50/90 border border-emerald-200 px-3.5 py-1 text-[12px] font-bold text-emerald-700 backdrop-blur-sm">
+                {salary}
+              </span>
+            )}
+            {job.isBoosted && (
+              <span className="rounded-full bg-gt-yellow border-2 border-gt-black px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-gt-black">
+                Featured
+              </span>
+            )}
+          </div>
+
+          {/* Apply + Meta Row */}
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <ApplyButton
+              jobId={job.id}
+              applyUrl={job.applyUrl}
+              label={dict.job.apply}
+              loginLabel={dict.job.applyLogin}
+            />
+            <time dateTime={job.postedAt.toISOString()} className="text-[13px] text-gray-400">
+              {dict.job.posted} {timeAgo(job.postedAt)}
+            </time>
+            <div className="ml-auto">
+              <ShareJob title={job.title} company={job.company.name} />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <article
-        className="mx-auto max-w-[52rem] px-6 py-10 md:py-14"
+        className="mx-auto max-w-[52rem] px-6 py-12 md:py-16"
         itemScope
         itemType="https://schema.org/JobPosting"
         data-job-id={job.id}
@@ -122,88 +211,6 @@ export async function JobDetailPage({
         <meta itemProp="title" content={job.title} />
         <meta itemProp="datePosted" content={job.postedAt.toISOString().split("T")[0]} />
         {job.salaryMin && job.salaryMax && <meta itemProp="baseSalary" content={`${job.salaryMin}-${job.salaryMax} ${job.salaryCurrency}`} />}
-
-        {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-[13px] text-gray-400">
-          <Link href={`/${dict.jobsPath}`} className="transition-colors hover:text-gt-black">
-            {dict.nav.jobs}
-          </Link>
-          <span aria-hidden="true" className="text-gray-300">/</span>
-          <Link href={`/${dict.jobsPath}/${job.category}`} className="transition-colors hover:text-gt-black">
-            {dict.categories[job.category] ?? job.category}
-          </Link>
-          <span aria-hidden="true" className="text-gray-300">/</span>
-          <span className="text-gray-600 font-medium" aria-current="page">{job.title}</span>
-        </nav>
-
-        {/* Job Header — editorial hero */}
-        <header className="flex items-start gap-6">
-          <CompanyLogo
-            name={job.company.name}
-            logoUrl={job.company.logoUrl}
-            domain={job.company.domain}
-            size={72}
-          />
-          <div className="flex-1">
-            <h1 className="font-display text-[2.25rem] font-bold leading-[1.15] tracking-tight md:text-[2.75rem]" itemProp="title">{job.title}</h1>
-            <p className="mt-3 text-lg text-gray-500">
-              <Link
-                href={`/${dict.companiesPath}/${job.company.slug}`}
-                className="font-semibold text-gt-black transition-colors hover:text-gt-purple"
-                itemProp="hiringOrganization"
-              >
-                {job.company.name}
-              </Link>
-              {job.location && <span className="text-gray-300"> &bull; </span>}
-              {job.location && <span>{job.location}</span>}
-            </p>
-          </div>
-        </header>
-
-        {/* Quick Facts Bar */}
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-gt-purple/12 border border-gt-purple/20 px-3.5 py-1 text-[12px] font-bold text-gt-black">
-            {dict.categories[job.category] ?? job.category}
-          </span>
-          <span className="rounded-full bg-gt-pink/15 border border-gt-pink/25 px-3.5 py-1 text-[12px] font-bold text-gt-black">
-            {dict.seniority[job.seniority] ?? job.seniority}
-          </span>
-          <span className="rounded-full bg-gt-cream border border-gt-cream px-3.5 py-1 text-[12px] font-bold text-gt-black">
-            {REMOTE_LABELS[job.remote] ?? job.remote}
-          </span>
-          <span className="rounded-full bg-gray-100 border border-gray-200 px-3.5 py-1 text-[12px] font-bold text-gt-dark">
-            {job.contractType?.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) ?? "Full-time"}
-          </span>
-          {salary && (
-            <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3.5 py-1 text-[12px] font-bold text-emerald-700">
-              {salary}
-            </span>
-          )}
-          {job.isBoosted && (
-            <span className="rounded-full bg-gt-yellow border-2 border-gt-black px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-gt-black">
-              Featured
-            </span>
-          )}
-        </div>
-
-        {/* Apply + Meta Row */}
-        <div className="mt-8 flex flex-wrap items-center gap-4">
-          <ApplyButton
-            jobId={job.id}
-            applyUrl={job.applyUrl}
-            label={dict.job.apply}
-            loginLabel={dict.job.applyLogin}
-          />
-          <time dateTime={job.postedAt.toISOString()} className="text-[13px] text-gray-400">
-            {dict.job.posted} {timeAgo(job.postedAt)}
-          </time>
-          <div className="ml-auto">
-            <ShareJob title={job.title} company={job.company.name} />
-          </div>
-        </div>
-
-        {/* Divider before content */}
-        <div className="mt-10 mb-12 h-px bg-gradient-to-r from-transparent via-black/8 to-transparent" />
 
         {/* Description — Rich or Plain */}
         {richData ? (
