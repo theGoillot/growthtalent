@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers";
 
@@ -44,6 +45,14 @@ export default function RootLayout({
     <html lang="en" className={cn("h-full", inter.variable)}>
       <head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: websiteJsonLd }} />
+        {process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN && (
+          <Script
+            defer
+            data-domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
+            src="https://plausible.io/js/script.js"
+            strategy="afterInteractive"
+          />
+        )}
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>

@@ -104,9 +104,9 @@ export function Footer({ dict }: { dict: Dictionary }) {
             &copy; {new Date().getFullYear()} Growth.Talent. Vivons le growth pleinement.
           </p>
           <div className="flex gap-5 text-[11px] text-white/25">
-            <Link href="#" className="transition-colors hover:text-white/50">Privacy</Link>
-            <Link href="#" className="transition-colors hover:text-white/50">Terms</Link>
-            <Link href="#" className="transition-colors hover:text-white/50">GDPR</Link>
+            <Link href="/privacy" className="transition-colors hover:text-white/50">Privacy</Link>
+            <Link href="/terms" className="transition-colors hover:text-white/50">Terms</Link>
+            <Link href="/privacy#your-rights" className="transition-colors hover:text-white/50">GDPR</Link>
           </div>
         </div>
       </div>

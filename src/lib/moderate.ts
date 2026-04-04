@@ -6,6 +6,7 @@ const anthropic = new Anthropic({
 });
 
 interface ModerationResult {
+  isRelevant?: boolean;
   score: number; // 1-10
   flags: string[];
   reasoning: string;
@@ -28,12 +29,23 @@ export async function moderateJob(jobId: string): Promise<ModerationResult> {
     return { score: 10, flags: [], reasoning: "Auto-approved (dev mode)" };
   }
 
-  const prompt = `You are a job posting moderator for Growth.Talent, a growth marketing job board.
+  const prompt = `You are a strict job posting moderator for Growth.Talent, a growth marketing job board.
 
 Review this job posting and return a JSON response with:
-- score: 1-10 (10 = perfect legitimate job, 1 = obvious spam/scam)
+- isRelevant: true/false (is this actually a growth/marketing role?)
+- score: 1-10 (10 = perfect legitimate growth role, 1 = obvious spam/scam/irrelevant)
 - flags: array of red flag strings (empty if none)
 - reasoning: one sentence explaining your assessment
+
+BE STRICT. These are NOT growth/marketing roles — score 1-3:
+- Talent acquisition, recruiting, HR roles
+- Event coordination (non-digital events)
+- Administrative assistants, office managers
+- Customer support, customer success (unless "growth" is in the title)
+- Pure sales roles (AE, SDR, BDR) without marketing context
+- Project management without explicit marketing context
+- Financial analysis, business analysis
+- Teaching, nursing, legal, trades
 
 Red flags to check for:
 - Spam or scam indicators (too-good-to-be-true salary, vague description, suspicious company)
@@ -41,7 +53,6 @@ Red flags to check for:
 - Missing critical info (no real job described)
 - Fake company or suspicious domain
 - MLM, pyramid schemes
-- Not actually a growth/marketing role
 
 Job posting:
 Title: ${job.title}
@@ -63,9 +74,11 @@ Respond ONLY with valid JSON, no other text.`;
     const text = response.content[0].type === "text" ? response.content[0].text : "";
     const result: ModerationResult = JSON.parse(text);
 
-    // Determine status based on score
+    // Determine status based on score and relevance
     let status: "APPROVED" | "FLAGGED" | "REJECTED";
-    if (result.score >= 7 && result.flags.length === 0) {
+    if (result.isRelevant === false) {
+      status = "REJECTED";
+    } else if (result.score >= 7 && result.flags.length === 0) {
       status = "APPROVED";
     } else if (result.score >= 4) {
       status = "FLAGGED";

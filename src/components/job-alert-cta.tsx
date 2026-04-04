@@ -15,7 +15,7 @@ export function JobAlertCta({ category }: { category: string }) {
       await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, category }),
+        body: JSON.stringify({ email, source: `job-alert-${category}` }),
       });
       setSubmitted(true);
     } catch {

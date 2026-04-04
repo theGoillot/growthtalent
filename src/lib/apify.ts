@@ -45,6 +45,7 @@ function isAgency(companyName: string): boolean {
 
 // Title MUST contain one of these keywords (strict — description alone is not enough)
 const TITLE_KEYWORDS = [
+  // English
   "growth", "marketing", "seo", "acquisition", "demand gen",
   "performance market", "paid media", "paid acquisition",
   "crm", "lifecycle", "retention", "content market",
@@ -52,13 +53,36 @@ const TITLE_KEYWORDS = [
   "head of digital", "head of dtc", "social media",
   "community manager", "partnerships", "revenue market",
   "go-to-market", "gtm", "analytics market",
+  // French
+  "responsable growth", "responsable acquisition", "responsable crm",
+  "responsable marketing", "responsable seo", "chef de projet marketing",
+  "directeur marketing", "directeur acquisition",
+  // Spanish
+  "gerente de growth", "gerente de marketing", "jefe de marketing",
+  "marketing de performance", "gerente de marketing digital",
+  // Portuguese
+  "gestor de marketing", "gerente de growth", "marketing de performance",
 ];
 
 // These titles are NEVER growth roles even if keyword matches
 const EXCLUDE_TITLES = [
+  // Engineering / Design / Data
   "software engineer", "data scientist", "ux designer", "ui designer",
-  "recruiter", "hr ", "human resource", "nurse", "teacher", "lawyer",
-  "attorney", "accountant", "mechanic", "chef", "nanny", "sitter",
+  // HR / Recruiting
+  "recruiter", "hr ", "human resource", "talent acquisition",
+  // Admin / Support
+  "administrative", "receptionist", "office manager", "executive assistant",
+  "customer success", "customer support", "customer service",
+  // Sales (non-marketing)
+  "sales representative", "account executive", "business development rep",
+  "sdr", "sales engineer",
+  // Finance / Legal / Ops
+  "accountant", "financial analyst", "business analyst", "lawyer",
+  "attorney", "project manager", "program manager",
+  // Events (non-digital)
+  "event coordinator", "event planner", "event marketing",
+  // Trades / Other
+  "nurse", "teacher", "mechanic", "chef", "nanny", "sitter",
   "physiotherapist", "coach", "principal", "assistant professor",
   "gallery assistant", "park naturalist", "security", "porter",
   "casting", "buyer", "economist", "warehouse", "driver",
