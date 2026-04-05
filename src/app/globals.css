@@ -182,6 +182,16 @@ body {
   animation-play-state: paused;
 }
 
+/* ── Hide scrollbar for carousel ────────────────────────── */
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Rich Job Detail polish ──────────────────────────────── */
 
 .rich-section-enter {

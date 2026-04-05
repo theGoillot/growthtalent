@@ -2,18 +2,11 @@ import Link from "next/link";
 import type { Locale } from "@/dictionaries";
 import { getDictionary } from "@/dictionaries";
 import { getJobs, getCategoriesWithCount, getStats, getCompaniesWithLogos } from "@/lib/queries";
-import { JobCard } from "@/components/job-card";
 import { LogoTicker } from "@/components/logo-ticker";
-import { HeroSearch } from "@/components/hero-search";
-import { AudienceTabs } from "@/components/audience-tabs";
 import { StatCounter } from "@/components/stat-counter";
-
-const MARKETS = [
-  { flag: "\ud83c\uddfa\ud83c\uddf8", label: "USA", path: "/jobs", tagline: "NYC, SF, Austin & more" },
-  { flag: "\ud83c\uddeb\ud83c\uddf7", label: "France", path: "/emplois", tagline: "Paris, Lyon & remote" },
-  { flag: "\ud83c\udf0e", label: "LatAm", path: "/empleos", tagline: "Mexico, Colombia, Argentina" },
-  { flag: "\ud83c\udde7\ud83c\uddf7", label: "Brasil", path: "/empregos", tagline: "S\u00e3o Paulo & remote" },
-];
+import { JobCarousel } from "@/components/job-carousel";
+import { HomepageHero } from "@/components/homepage-hero";
+import { HomepageNav } from "@/components/homepage-nav";
 
 export async function MarketHomepage({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
@@ -24,207 +17,161 @@ export async function MarketHomepage({ locale }: { locale: Locale }) {
     getCompaniesWithLogos(locale),
   ]);
 
+  // Prepare lightweight job data for client-side search
+  const searchJobs = jobs.map((j) => ({
+    title: j.title,
+    slug: j.slug,
+    category: j.category,
+    company: { name: j.company.name, slug: j.company.slug, domain: j.company.domain },
+  }));
+
   return (
     <>
-      {/* ── Hero ────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-gt-cream/40 via-white to-white">
-        {/* Decorative blurs */}
-        <div className="pointer-events-none absolute -left-32 top-20 h-96 w-96 rounded-full bg-gt-purple/10 blur-[100px]" />
-        <div className="pointer-events-none absolute -right-32 top-40 h-80 w-80 rounded-full bg-gt-pink/10 blur-[100px]" />
-        <div className="pointer-events-none absolute left-1/3 -top-20 h-64 w-64 rounded-full bg-gt-yellow/15 blur-[80px]" />
+      {/* Transparent navbar */}
+      <HomepageNav />
 
-        <div className="relative mx-auto max-w-5xl px-6 pb-16 pt-20 md:pb-24 md:pt-32">
-          {/* Headline */}
-          <h1 className="font-display text-center text-[clamp(3rem,8vw,7rem)] font-bold leading-[0.92] tracking-tight text-gt-black">
-            {dict.hero.title}
-          </h1>
+      {/* Dark Hero with toggle + search */}
+      <HomepageHero
+        jobsPath={dict.jobsPath}
+        jobCount={stats.jobCount}
+        companyCount={stats.companyCount}
+        jobs={searchJobs}
+        categories={categories}
+      />
 
-          {/* Subtitle */}
-          <p className="mx-auto mt-8 max-w-xl text-center text-lg leading-relaxed text-gray-500">
-            {dict.hero.subtitle}
-          </p>
-
-          {/* Search */}
-          <div className="mt-10">
-            <HeroSearch jobsPath={dict.jobsPath} />
-          </div>
-        </div>
-      </section>
-
-      {/* ── Company Logo Ticker ─────────────────────── */}
+      {/* ── Logo Ticker ─────────────────────────────── */}
       {companies.length > 0 && <LogoTicker companies={companies} />}
 
-      {/* ── Stats Bar ───────────────────────────────── */}
-      <section className="w-full bg-white py-12">
+      {/* ── Stats ───────────────────────────────────── */}
+      <section className="w-full bg-white py-16">
         <div className="mx-auto flex max-w-4xl items-center justify-center gap-12 px-6 sm:gap-20">
-          <StatCounter end={stats.jobCount} label={dict.nav.jobs} suffix="+" />
-          <div className="h-10 w-px bg-gray-200" />
-          <StatCounter end={stats.companyCount} label={dict.nav.companies} suffix="+" />
-          <div className="h-10 w-px bg-gray-200" />
+          <StatCounter end={stats.jobCount} label="Open Roles" suffix="+" />
+          <div className="h-12 w-px bg-gray-100" />
+          <StatCounter end={stats.companyCount} label="Companies" suffix="+" />
+          <div className="h-12 w-px bg-gray-100" />
           <StatCounter end={4} label="Markets" />
         </div>
       </section>
 
-      {/* ── Dual Audience Tabs ──────────────────────── */}
-      <section className="w-full bg-white pb-20 pt-8">
-        <div className="mx-auto max-w-7xl px-6">
-          <AudienceTabs
-            talentContent={
-              <>
-                {/* Latest Jobs */}
-                <div>
-                  <div className="flex items-end justify-between mb-8">
-                    <div>
-                      <h2 className="font-display text-3xl font-bold md:text-4xl">{dict.job.allJobs}</h2>
-                      <p className="mt-2 text-sm text-gray-400">Curated roles with real salaries. Updated daily.</p>
-                    </div>
-                    <Link
-                      href={`/${dict.jobsPath}`}
-                      className="hidden rounded-full border-2 border-gt-black px-5 py-2.5 text-sm font-bold transition-all hover:bg-gt-black hover:text-white sm:block"
-                    >
-                      {dict.hero.cta} &rarr;
-                    </Link>
-                  </div>
-                  <div className="space-y-3">
-                    {jobs.map((job) => (
-                      <JobCard key={job.id} job={job} dict={dict} jobsPath={dict.jobsPath} />
-                    ))}
-                  </div>
-                  <div className="mt-8 text-center sm:hidden">
-                    <Link
-                      href={`/${dict.jobsPath}`}
-                      className="rounded-full border-2 border-gt-black bg-gt-black px-8 py-3 text-sm font-bold text-white"
-                    >
-                      {dict.hero.cta} &rarr;
-                    </Link>
-                  </div>
+      {/* ── Value Props ─────────────────────────────── */}
+      <section className="w-full bg-gray-50/50 py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center mb-16">
+            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gt-purple mb-4">Why Growth.Talent</p>
+            <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">Not another job board</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>,
+                title: "Real salaries",
+                desc: "Every listing shows compensation. If the company hides it, we estimate from market data. No more guessing, no more wasted interviews.",
+                accent: "gt-purple",
+              },
+              {
+                icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+                title: "Curated, not scraped",
+                desc: "AI-moderated with human review. No spam, no recruiter noise, no ghost listings. Every role is a real growth position at a real company.",
+                accent: "gt-yellow",
+              },
+              {
+                icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+                title: "Direct to company",
+                desc: "One click to the company's ATS. No profiles to fill, no middlemen, no talent marketplace games. You apply, they see you.",
+                accent: "gt-pink",
+              },
+            ].map((v) => (
+              <div
+                key={v.title}
+                className="group relative rounded-3xl border border-black/[0.05] bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)]"
+                style={{ perspective: "800px" }}
+              >
+                <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-${v.accent}/10 text-${v.accent}`}>
+                  {v.icon}
                 </div>
-              </>
-            }
-            employerContent={
-              <div className="mx-auto max-w-3xl">
-                <div className="text-center mb-12">
-                  <h2 className="font-display text-3xl font-bold md:text-4xl">
-                    Reach growth professionals where they look
-                  </h2>
-                  <p className="mt-3 text-gray-500">
-                    Post for free. Boost for visibility. No middlemen.
-                  </p>
-                </div>
-
-                {/* Pricing cards */}
-                <div className="grid gap-6 md:grid-cols-2">
-                  {/* Free */}
-                  <div className="rounded-3xl border-2 border-black/10 bg-white p-8">
-                    <div className="text-xs font-bold uppercase tracking-[0.15em] text-gray-400">Free</div>
-                    <div className="mt-2 font-display text-4xl font-bold">$0</div>
-                    <p className="mt-3 text-sm text-gray-500">Post your growth role and reach qualified candidates.</p>
-                    <ul className="mt-6 space-y-3">
-                      {["Job listed in category", "Company page created", "Email applications", "30-day listing"].map((f) => (
-                        <li key={f} className="flex items-center gap-2.5 text-sm text-gray-700">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link
-                      href="/post-job"
-                      className="mt-8 block w-full rounded-full border-2 border-gt-black py-3 text-center text-sm font-bold transition-all hover:bg-gt-black hover:text-white"
-                    >
-                      Post a Job (Free)
-                    </Link>
-                  </div>
-
-                  {/* Boost */}
-                  <div className="rounded-3xl border-2 border-gt-black bg-gt-black p-8 text-white shadow-[6px_6px_0px_rgba(168,170,216,0.4)]">
-                    <div className="text-xs font-bold uppercase tracking-[0.15em] text-gt-purple">Boost</div>
-                    <div className="mt-2 font-display text-4xl font-bold">$299</div>
-                    <p className="mt-3 text-sm text-white/60">Featured placement + candidate profiles. Maximum visibility.</p>
-                    <ul className="mt-6 space-y-3">
-                      {["Featured at top of listings", "\"Featured\" badge on your listing", "Access to candidate profiles", "Priority in search results", "30-day boost period"].map((f) => (
-                        <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFE495" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link
-                      href="/boost"
-                      className="mt-8 block w-full rounded-full bg-gt-yellow py-3 text-center text-sm font-bold text-gt-black transition-all hover:shadow-lg"
-                    >
-                      Boost a Listing
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Claim */}
-                <div className="mt-8 rounded-2xl border border-black/10 bg-gt-cream/20 p-6 text-center">
-                  <p className="text-sm text-gray-600">
-                    Already see your company on Growth.Talent?{" "}
-                    <Link href="/claim" className="font-semibold text-gt-purple hover:underline">
-                      Claim your page &rarr;
-                    </Link>
-                  </p>
-                </div>
+                <h3 className="font-display text-xl font-bold">{v.title}</h3>
+                <p className="mt-3 text-[14px] leading-relaxed text-gray-500">{v.desc}</p>
               </div>
-            }
-          />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Featured Jobs Carousel ──────────────────── */}
+      <section className="w-full bg-white py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gray-400 mb-3">Featured</p>
+              <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">Latest growth roles</h2>
+            </div>
+            <Link
+              href={`/${dict.jobsPath}`}
+              className="hidden rounded-full border-2 border-gt-black px-6 py-2.5 text-[13px] font-bold transition-all hover:bg-gt-black hover:text-white sm:block"
+            >
+              View all jobs &rarr;
+            </Link>
+          </div>
+          <JobCarousel jobs={jobs} jobsPath={dict.jobsPath} />
+          <div className="mt-8 text-center sm:hidden">
+            <Link href={`/${dict.jobsPath}`} className="rounded-full border-2 border-gt-black bg-gt-black px-8 py-3 text-[13px] font-bold text-white">
+              View all jobs &rarr;
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* ── Categories ──────────────────────────────── */}
-      {categories.length > 0 && (
-        <section className="w-full bg-gt-cream/30 py-20">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center mb-12">
-              <h2 className="font-display text-3xl font-bold md:text-4xl">
-                Browse by specialty
-              </h2>
-              <p className="mt-2 text-sm text-gray-500">
-                {stats.jobCount}+ roles across {categories.length} growth disciplines
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {categories.map((c) => (
+      <section className="w-full bg-gray-50/50 py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center mb-14">
+            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gray-400 mb-3">Specialties</p>
+            <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">Browse by discipline</h2>
+          </div>
+          <div className="flex flex-wrap justify-center gap-3">
+            {categories.map((c) => {
+              const isLarge = c.count > 15;
+              return (
                 <Link
                   key={c.category}
                   href={`/${dict.jobsPath}/${c.category}`}
-                  className="group rounded-2xl border-2 border-transparent bg-white p-5 transition-all hover:border-gt-black hover:shadow-[4px_4px_0px_#000]"
+                  className={`group rounded-2xl border-2 border-transparent bg-white transition-all hover:border-gt-black hover:shadow-[4px_4px_0px_#000] hover:-translate-y-0.5 ${
+                    isLarge ? "px-7 py-5" : "px-5 py-4"
+                  }`}
                 >
-                  <div className="font-semibold text-gt-black group-hover:text-gt-black">
+                  <span className={`font-semibold text-gt-black ${isLarge ? "text-[16px]" : "text-[14px]"}`}>
                     {dict.categories[c.category] ?? c.category}
-                  </div>
-                  <div className="mt-1 text-sm text-gray-400">
-                    {c.count} {c.count === 1 ? "job" : "jobs"}
-                  </div>
+                  </span>
+                  <span className={`ml-2 text-gray-300 ${isLarge ? "text-[14px]" : "text-[12px]"}`}>{c.count}</span>
                 </Link>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* ── Markets ─────────────────────────────────── */}
-      <section className="w-full bg-white py-20">
+      <section className="w-full bg-white py-24">
         <div className="mx-auto max-w-5xl px-6">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-3xl font-bold md:text-4xl">
-              Growth roles worldwide
-            </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              One board, four markets. Find roles where you want to work.
-            </p>
+          <div className="text-center mb-14">
+            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gray-400 mb-3">Global</p>
+            <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">Growth roles worldwide</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {MARKETS.map((m) => (
+            {[
+              { flag: "\ud83c\uddfa\ud83c\uddf8", label: "USA", tagline: "NYC, SF, Austin & more", path: "/jobs" },
+              { flag: "\ud83c\uddeb\ud83c\uddf7", label: "France", tagline: "Paris, Lyon & remote", path: "/emplois" },
+              { flag: "\ud83c\udf0e", label: "LatAm", tagline: "Mexico, Colombia, Argentina", path: "/empleos" },
+              { flag: "\ud83c\udde7\ud83c\uddf7", label: "Brasil", tagline: "S\u00e3o Paulo & remote", path: "/empregos" },
+            ].map((m) => (
               <Link
                 key={m.path}
                 href={m.path}
-                className="group rounded-2xl border-2 border-black/10 bg-white p-6 text-center transition-all hover:border-gt-black hover:shadow-[4px_4px_0px_#000]"
+                className="group rounded-2xl border-2 border-black/[0.05] bg-white p-7 text-center transition-all hover:border-gt-black hover:shadow-[4px_4px_0px_#000] hover:-translate-y-0.5"
               >
                 <span className="text-4xl">{m.flag}</span>
-                <div className="mt-3 font-display text-lg font-bold">{m.label}</div>
-                <div className="mt-1 text-xs text-gray-400">{m.tagline}</div>
+                <div className="mt-4 font-display text-lg font-bold">{m.label}</div>
+                <div className="mt-1 text-[12px] text-gray-400">{m.tagline}</div>
               </Link>
             ))}
           </div>
@@ -232,34 +179,35 @@ export async function MarketHomepage({ locale }: { locale: Locale }) {
       </section>
 
       {/* ── Newsletter CTA ──────────────────────────── */}
-      <section className="w-full bg-gt-dark py-20 text-white">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <h2 className="font-display text-3xl font-bold md:text-4xl">
-            Get the weekly growth job digest
+      <section className="relative w-full overflow-hidden py-24" style={{ backgroundColor: "#0d0d0d" }}>
+        {/* Decorative */}
+        <div className="pointer-events-none absolute left-1/4 top-0 h-80 w-80 rounded-full bg-gt-purple/6 blur-[120px]" />
+        <div className="pointer-events-none absolute right-1/4 bottom-0 h-60 w-60 rounded-full bg-gt-yellow/5 blur-[100px]" />
+
+        <div className="relative mx-auto max-w-2xl px-6 text-center">
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/20 mb-5">Newsletter</p>
+          <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
+            The weekly growth digest
           </h2>
-          <p className="mt-3 text-white/50">
-            The best growth roles, curated by humans. Every Monday. Free.
+          <p className="mt-4 text-[15px] text-white/35 leading-relaxed">
+            The best growth roles, curated by humans. Every Monday morning. Free forever.
           </p>
-          <form
-            action="/api/subscribe"
-            method="POST"
-            className="mx-auto mt-8 flex max-w-md gap-3"
-          >
+          <form action="/api/subscribe" method="POST" className="mx-auto mt-8 flex max-w-md gap-3">
             <input
               type="email"
               name="email"
-              placeholder="you@email.com"
+              placeholder="you@company.com"
               required
-              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-gt-purple focus:outline-none"
+              className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] px-5 py-3.5 text-[14px] text-white placeholder:text-white/20 focus:border-gt-purple/40 focus:outline-none focus:ring-1 focus:ring-gt-purple/20 transition-all"
             />
             <button
               type="submit"
-              className="rounded-xl bg-gt-yellow px-6 py-3 text-sm font-bold text-gt-black transition-all hover:bg-gt-yellow/80"
+              className="shrink-0 rounded-xl bg-white px-6 py-3.5 text-[13px] font-bold text-gt-black transition-all hover:bg-gt-yellow"
             >
               Subscribe
             </button>
           </form>
-          <p className="mt-4 text-[11px] text-white/25">No spam. Unsubscribe anytime.</p>
+          <p className="mt-5 text-[11px] text-white/15">No spam. Unsubscribe with one click.</p>
         </div>
       </section>
     </>
