@@ -20,14 +20,16 @@ model Company {
   size      String?  // "1-10", "11-50", "51-200", "201-500", "500+"
   industry  String?
   market    Market   @default(USA)
-  isClaimed Boolean  @default(false)
+  linkedinUrl String?
+  isClaimed   Boolean  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  jobs   Job[]
-  claims CompanyClaim[]
-  boosts Boost[]
+  jobs       Job[]
+  claims     CompanyClaim[]
+  boosts     Boost[]
+  candidates Candidate[]
 
   @@index([market])
   @@index([name])
@@ -90,7 +92,12 @@ model Candidate {
   avatarUrl     String?
   linkedinSub   String?  @unique // LinkedIn OIDC sub claim
 
-  // Profile completion fields
+  // Profile fields
+  slug          String?  @unique  // for /talent/[slug] public URL
+  linkedinUrl   String?  // linkedin.com/in/jeremy-goillot
+  headline      String?  // "VP Growth @ Spendesk → CEO @ MFC"
+  bio           String?  // 2-3 sentence bio
+  photoUrl      String?  // uploaded photo (Supabase Storage)
   currentTitle  String?
   seniority     Seniority?
   city          String?
@@ -102,12 +109,27 @@ model Candidate {
   teamScope     String?  // "solo", "1-5", "5-15", "15-50", "50+"
   markets       Market[] // interested markets
   resumeUrl     String?
+  reportsTo     String?  // "CEO", "VP Marketing", "Head of Growth"
+  isInGrowthTeam Boolean @default(false)
+
+  // Company link
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id])
+
+  // Status
   isProfileComplete Boolean @default(false)
+  isVerified    Boolean  @default(false)  // admin-reviewed
+  isBanned      Boolean  @default(false)  // spam/abuse
+  profileVisibility String @default("PUBLIC") // PUBLIC, PRIVATE, EMPLOYERS_ONLY
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   applications  Application[]
+
+  @@index([companyId])
+  @@index([seniority])
+  @@index([city])
 }
 
 // ── Applications ───────────────────────────────────────────────

@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 import { moderateJob } from "@/lib/moderate";
+import { rateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 2 posts per minute per IP
+  const { allowed } = rateLimit(getRateLimitKey(request, "post-job"), 2, 60000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
+  }
+
   try {
     const body = await request.json();
 
