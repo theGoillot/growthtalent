@@ -27,7 +27,7 @@ export default async function DashboardPage() {
 
   if (!candidate) redirect("/auth/signin");
 
-  if (!candidate.isProfileComplete) redirect("/profile/complete");
+  if (!candidate.isProfileComplete) redirect("/profile/edit");
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
           </Link>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{candidate.name}</span>
-            <Link href="/profile/complete" className="text-sm text-gt-purple hover:underline">
+            <Link href="/profile/edit" className="text-sm text-gt-purple hover:underline">
               Edit Profile
             </Link>
           </div>
