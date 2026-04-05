@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getAllJobSlugs, getAllCompanySlugs, getCitiesWithCount } from "@/lib/queries";
 import { CATEGORIES } from "@/lib/categories";
 import { CONTENT_SLUGS } from "@/lib/content";
+import { getAllSalarySlugs } from "@/lib/salary-data";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const cat of CATEGORIES) {
       entries.push({ url: `${BASE}/${jobsPath}/${cat}`, changeFrequency: "daily", priority: 0.8 });
     }
+  }
+
+  // Remote job pages
+  entries.push({ url: `${BASE}/jobs/remote`, changeFrequency: "daily", priority: 0.85 });
+  for (const cat of CATEGORIES) {
+    entries.push({ url: `${BASE}/jobs/remote/${cat}`, changeFrequency: "daily", priority: 0.8 });
+  }
+
+  // Salary pages
+  entries.push({ url: `${BASE}/salaries`, changeFrequency: "weekly", priority: 0.85 });
+  for (const slug of getAllSalarySlugs()) {
+    entries.push({ url: `${BASE}/salaries/${slug}`, changeFrequency: "weekly", priority: 0.8 });
   }
 
   // City landing pages (category + city combos for top US cities)
