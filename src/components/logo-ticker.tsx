@@ -15,9 +15,11 @@ function LogoItem({ company }: { company: { name: string; domain: string | null 
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={`https://img.logo.dev/${company.domain}?token=pk_a8C5jGEYR3yhZaKC7wMuvA&size=64&retina=true`}
-          alt={company.name}
+          alt={`${company.name} logo`}
           width={24}
           height={24}
+          loading="lazy"
+          decoding="async"
           className="rounded"
           onError={() => setImgError(true)}
         />

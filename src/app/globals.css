@@ -8,7 +8,8 @@
 
 @font-face {
   font-family: "GT Super Display";
-  src: url("/fonts/GT-Super-Display-Bold.ttf") format("truetype");
+  src: url("/fonts/GT-Super-Display-Bold.woff2") format("woff2"),
+       url("/fonts/GT-Super-Display-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -16,7 +17,8 @@
 
 @font-face {
   font-family: "GT Super Display";
-  src: url("/fonts/GT-Super-Display-Super.otf") format("opentype");
+  src: url("/fonts/GT-Super-Display-Super.woff2") format("woff2"),
+       url("/fonts/GT-Super-Display-Super.otf") format("opentype");
   font-weight: 900;
   font-style: normal;
   font-display: swap;

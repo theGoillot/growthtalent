@@ -6,7 +6,6 @@ import { LogoTicker } from "@/components/logo-ticker";
 import { StatCounter } from "@/components/stat-counter";
 import { JobCarousel } from "@/components/job-carousel";
 import { HomepageHero } from "@/components/homepage-hero";
-// HomepageNav removed — existing layout header handles nav
 
 export async function MarketHomepage({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);

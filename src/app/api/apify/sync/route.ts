@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { syncExistingRun, runApifyActor, waitForRun } from "@/lib/apify";
+import { runApifyActor, waitForRun, fetchRunResults } from "@/lib/apify";
 import { ingestJob } from "@/lib/ingest";
+import { linkedInSource } from "@/lib/scrapers/linkedin";
 
-export const maxDuration = 300; // 5 min max for Vercel
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
-  // Auth: admin password or ingest API key
   const apiKey = request.headers.get("x-api-key");
   if (apiKey !== process.env.INGEST_API_KEY && apiKey !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
     const location = body.location as string | undefined;
     const limit = (body.limit as number) ?? 50;
 
-    // Either use existing runId or start a new run
     if (!runId) {
       if (!query || !location) {
         return NextResponse.json(
@@ -29,10 +28,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log(`Starting Apify run: "${query}" in "${location}" (limit: ${limit})`);
-      const actorId = (body.actorId as string) ?? "BHzefUZlZRKWxkTck"; // default LinkedIn
+      const actorId = (body.actorId as string) ?? "BHzefUZlZRKWxkTck";
       runId = await runApifyActor(actorId, [query], location, limit);
-      console.log(`Run started: ${runId}`);
 
       const status = await waitForRun(runId);
       if (status === "FAILED") {
@@ -40,24 +37,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch and transform results
-    console.log(`Syncing run ${runId} for market ${market}`);
-    const { total, relevant, filtered, jobs } = await syncExistingRun(runId, market);
+    // Fetch and transform using LinkedIn source (default for sync endpoint)
+    const items = await fetchRunResults(runId);
+    let filtered = 0;
+    let created = 0;
+    let duplicates = 0;
+    let errors = 0;
 
-    // Ingest all relevant jobs
-    const results = await Promise.all(jobs.map(ingestJob));
-    const created = results.filter((r) => r.status === "created").length;
-    const duplicates = results.filter((r) => r.status === "duplicate").length;
-    const errors = results.filter((r) => r.status === "error").length;
+    for (const item of items) {
+      const payload = linkedInSource.transform(item, market);
+      if (!payload) { filtered++; continue; }
+      const result = await ingestJob(payload);
+      if (result.status === "created") created++;
+      else if (result.status === "duplicate") duplicates++;
+      else errors++;
+    }
 
     return NextResponse.json({
       runId,
       market,
-      apify: { total, relevant, filtered },
+      apify: { total: items.length, relevant: items.length - filtered, filtered },
       ingested: { created, duplicates, errors },
     });
   } catch (error) {
-    console.error("Apify sync error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Sync failed" },
       { status: 500 }

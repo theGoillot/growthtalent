@@ -44,6 +44,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("h-full", inter.variable)}>
       <head>
+        <link rel="preconnect" href="https://img.logo.dev" />
+        <link rel="dns-prefetch" href="https://img.logo.dev" />
+        <link rel="preconnect" href="https://plausible.io" />
+        <meta name="theme-color" content="#000000" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: websiteJsonLd }} />
         {process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN && (
           <Script
