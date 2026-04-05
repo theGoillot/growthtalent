@@ -151,14 +151,15 @@ export function transformLinkedInJob(item: LinkedInJob, market: "usa" | "france"
   };
 }
 
-// ── Apify API functions ─────────────────────────────────
+// ── Apify API functions (generic — work with any actor) ──
 
-export async function runLinkedInScraper(
+export async function runApifyActor(
+  actorId: string,
   searchQueries: string[],
   location: string,
   limit: number = 50
 ): Promise<string> {
-  const res = await fetch(`${APIFY_BASE}/acts/${LINKEDIN_ACTOR_ID}/runs?token=${APIFY_TOKEN}`, {
+  const res = await fetch(`${APIFY_BASE}/acts/${actorId}/runs?token=${APIFY_TOKEN}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

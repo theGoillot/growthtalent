@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { syncExistingRun, runLinkedInScraper, waitForRun } from "@/lib/apify";
+import { syncExistingRun, runApifyActor, waitForRun } from "@/lib/apify";
 import { ingestJob } from "@/lib/ingest";
 
 export const maxDuration = 300; // 5 min max for Vercel
@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
       }
 
       console.log(`Starting Apify run: "${query}" in "${location}" (limit: ${limit})`);
-      runId = await runLinkedInScraper([query], location, limit);
+      const actorId = (body.actorId as string) ?? "BHzefUZlZRKWxkTck"; // default LinkedIn
+      runId = await runApifyActor(actorId, [query], location, limit);
       console.log(`Run started: ${runId}`);
 
       const status = await waitForRun(runId);

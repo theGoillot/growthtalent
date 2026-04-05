@@ -54,14 +54,28 @@ const SENIORITY_MAP: Record<string, "INTERN" | "JUNIOR" | "MID" | "SENIOR" | "LE
 
 export async function ingestJob(payload: IngestPayload): Promise<IngestResult> {
   try {
-    // 1. Dedup by source URL
+    // 1a. Dedup by source URL
     if (payload.url) {
       const existing = await db.job.findUnique({
         where: { sourceUrl: payload.url },
       });
       if (existing) {
-        return { status: "duplicate", jobId: existing.id, message: "Job already exists" };
+        return { status: "duplicate", jobId: existing.id, message: "Job already exists (same URL)" };
       }
+    }
+
+    // 1b. Cross-source dedup: same company + very similar title + same city
+    const companySlug = slugify(payload.company_name);
+    const titleSlug = slugify(payload.title);
+    const crossDupe = await db.job.findFirst({
+      where: {
+        slug: { startsWith: titleSlug.slice(0, 30) },
+        company: { slug: companySlug },
+        status: { not: "REJECTED" },
+      },
+    });
+    if (crossDupe) {
+      return { status: "duplicate", jobId: crossDupe.id, message: "Job already exists (cross-source)" };
     }
 
     // 2. Find or create company

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runLinkedInScraper, waitForRun, syncExistingRun } from "@/lib/apify";
+import { runApifyActor, waitForRun, fetchRunResults } from "@/lib/apify";
 import { ingestJob } from "@/lib/ingest";
-import { SEARCH_CONFIGS } from "@/lib/apify-searches";
+import { ALL_SOURCES } from "@/lib/scrapers";
 
 export const maxDuration = 300;
 
@@ -11,14 +11,17 @@ export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
 
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    // Also accept admin password for manual triggers
     const apiKey = request.nextUrl.searchParams.get("key");
     if (apiKey !== process.env.ADMIN_PASSWORD) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
+  // Optional: run a specific source only
+  const sourceFilter = request.nextUrl.searchParams.get("source");
+
   const results: Array<{
+    source: string;
     query: string;
     location: string;
     market: string;
@@ -28,59 +31,79 @@ export async function GET(request: NextRequest) {
     error?: string;
   }> = [];
 
-  for (const config of SEARCH_CONFIGS) {
-    try {
-      console.log(`[Cron] Running: "${config.queries.join(", ")}" in "${config.location}" (${config.market})`);
+  const sources = sourceFilter
+    ? ALL_SOURCES.filter((s) => s.name.toLowerCase() === sourceFilter.toLowerCase())
+    : ALL_SOURCES;
 
-      const runId = await runLinkedInScraper(config.queries, config.location, config.limit);
-      const status = await waitForRun(runId, 180000); // 3 min max per search
+  for (const source of sources) {
+    for (const config of source.configs) {
+      try {
+        console.log(`[Cron] ${source.name}: "${config.queries.join(", ")}" in "${config.location}" (${config.market})`);
 
-      if (status === "FAILED") {
+        const runId = await runApifyActor(source.actorId, config.queries, config.location, config.limit);
+        const status = await waitForRun(runId, 180000);
+
+        if (status === "FAILED") {
+          results.push({
+            source: source.name,
+            query: config.queries.join(", "),
+            location: config.location,
+            market: config.market,
+            created: 0, duplicates: 0, filtered: 0,
+            error: "Apify run failed",
+          });
+          continue;
+        }
+
+        const items = await fetchRunResults(runId);
+        let filtered = 0;
+        let created = 0;
+        let duplicates = 0;
+
+        for (const item of items) {
+          const payload = source.transform(item, config.market);
+          if (!payload) {
+            filtered++;
+            continue;
+          }
+
+          const result = await ingestJob(payload);
+          if (result.status === "created") created++;
+          if (result.status === "duplicate") duplicates++;
+        }
+
         results.push({
+          source: source.name,
           query: config.queries.join(", "),
           location: config.location,
           market: config.market,
-          created: 0,
-          duplicates: 0,
-          filtered: 0,
-          error: "Apify run failed",
+          created,
+          duplicates,
+          filtered,
         });
-        continue;
+      } catch (error) {
+        results.push({
+          source: source.name,
+          query: config.queries.join(", "),
+          location: config.location,
+          market: config.market,
+          created: 0, duplicates: 0, filtered: 0,
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
       }
-
-      const { relevant, filtered, jobs } = await syncExistingRun(runId, config.market);
-      const ingested = await Promise.all(jobs.map(ingestJob));
-
-      results.push({
-        query: config.queries.join(", "),
-        location: config.location,
-        market: config.market,
-        created: ingested.filter((r) => r.status === "created").length,
-        duplicates: ingested.filter((r) => r.status === "duplicate").length,
-        filtered,
-      });
-    } catch (error) {
-      results.push({
-        query: config.queries.join(", "),
-        location: config.location,
-        market: config.market,
-        created: 0,
-        duplicates: 0,
-        filtered: 0,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
     }
   }
 
   const totalCreated = results.reduce((sum, r) => sum + r.created, 0);
   const totalDuplicates = results.reduce((sum, r) => sum + r.duplicates, 0);
 
-  console.log(`[Cron] Complete: ${totalCreated} created, ${totalDuplicates} duplicates`);
+  console.log(`[Cron] Complete: ${totalCreated} created, ${totalDuplicates} duplicates across ${sources.length} sources`);
 
   return NextResponse.json({
     timestamp: new Date().toISOString(),
     totalCreated,
     totalDuplicates,
+    sources: sources.map((s) => s.name),
     searches: results,
   });
 }
