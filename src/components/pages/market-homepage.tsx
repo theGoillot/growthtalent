@@ -6,7 +6,7 @@ import { LogoTicker } from "@/components/logo-ticker";
 import { StatCounter } from "@/components/stat-counter";
 import { JobCarousel } from "@/components/job-carousel";
 import { HomepageHero } from "@/components/homepage-hero";
-import { HomepageNav } from "@/components/homepage-nav";
+// HomepageNav removed — existing layout header handles nav
 
 export async function MarketHomepage({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
@@ -27,9 +27,6 @@ export async function MarketHomepage({ locale }: { locale: Locale }) {
 
   return (
     <>
-      {/* Transparent navbar */}
-      <HomepageNav />
-
       {/* Dark Hero with toggle + search */}
       <HomepageHero
         jobsPath={dict.jobsPath}
@@ -43,7 +40,7 @@ export async function MarketHomepage({ locale }: { locale: Locale }) {
       {companies.length > 0 && <LogoTicker companies={companies} />}
 
       {/* ── Stats ───────────────────────────────────── */}
-      <section className="w-full bg-white py-16">
+      <section className="w-full bg-white py-12">
         <div className="mx-auto flex max-w-4xl items-center justify-center gap-12 px-6 sm:gap-20">
           <StatCounter end={stats.jobCount} label="Open Roles" suffix="+" />
           <div className="h-12 w-px bg-gray-100" />
@@ -54,51 +51,40 @@ export async function MarketHomepage({ locale }: { locale: Locale }) {
       </section>
 
       {/* ── Value Props ─────────────────────────────── */}
-      <section className="w-full bg-gray-50/50 py-24">
+      <section className="w-full bg-gray-50/50 py-16">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gt-purple mb-4">Why Growth.Talent</p>
             <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">Not another job board</h2>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>,
-                title: "Real salaries",
-                desc: "Every listing shows compensation. If the company hides it, we estimate from market data. No more guessing, no more wasted interviews.",
-                accent: "gt-purple",
-              },
-              {
-                icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
-                title: "Curated, not scraped",
-                desc: "AI-moderated with human review. No spam, no recruiter noise, no ghost listings. Every role is a real growth position at a real company.",
-                accent: "gt-yellow",
-              },
-              {
-                icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
-                title: "Direct to company",
-                desc: "One click to the company's ATS. No profiles to fill, no middlemen, no talent marketplace games. You apply, they see you.",
-                accent: "gt-pink",
-              },
-            ].map((v) => (
-              <div
-                key={v.title}
-                className="group relative rounded-3xl border border-black/[0.05] bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)]"
-                style={{ perspective: "800px" }}
-              >
-                <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-${v.accent}/10 text-${v.accent}`}>
-                  {v.icon}
-                </div>
-                <h3 className="font-display text-xl font-bold">{v.title}</h3>
-                <p className="mt-3 text-[14px] leading-relaxed text-gray-500">{v.desc}</p>
+            <div className="group relative rounded-3xl border border-black/[0.05] bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gt-purple/10 text-gt-purple">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
               </div>
-            ))}
+              <h3 className="font-display text-xl font-bold">Real salaries</h3>
+              <p className="mt-3 text-[14px] leading-relaxed text-gray-500">Every listing shows compensation. If the company hides it, we estimate from market data. No more guessing, no more wasted interviews.</p>
+            </div>
+            <div className="group relative rounded-3xl border border-black/[0.05] bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gt-yellow/20 text-gt-black">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              </div>
+              <h3 className="font-display text-xl font-bold">Curated, not scraped</h3>
+              <p className="mt-3 text-[14px] leading-relaxed text-gray-500">AI-moderated with human review. No spam, no recruiter noise, no ghost listings. Every role is a real growth position at a real company.</p>
+            </div>
+            <div className="group relative rounded-3xl border border-black/[0.05] bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gt-pink/15 text-gt-black">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              </div>
+              <h3 className="font-display text-xl font-bold">Direct to company</h3>
+              <p className="mt-3 text-[14px] leading-relaxed text-gray-500">One click to the company&apos;s ATS. No profiles to fill, no middlemen, no talent marketplace games. You apply, they see you.</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Featured Jobs Carousel ──────────────────── */}
-      <section className="w-full bg-white py-24">
+      <section className="w-full bg-white py-16">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex items-end justify-between mb-10">
             <div>
@@ -122,7 +108,7 @@ export async function MarketHomepage({ locale }: { locale: Locale }) {
       </section>
 
       {/* ── Categories ──────────────────────────────── */}
-      <section className="w-full bg-gray-50/50 py-24">
+      <section className="w-full bg-gray-50/50 py-16">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center mb-14">
             <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gray-400 mb-3">Specialties</p>
@@ -151,7 +137,7 @@ export async function MarketHomepage({ locale }: { locale: Locale }) {
       </section>
 
       {/* ── Markets ─────────────────────────────────── */}
-      <section className="w-full bg-white py-24">
+      <section className="w-full bg-white py-16">
         <div className="mx-auto max-w-5xl px-6">
           <div className="text-center mb-14">
             <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gray-400 mb-3">Global</p>
@@ -179,7 +165,7 @@ export async function MarketHomepage({ locale }: { locale: Locale }) {
       </section>
 
       {/* ── Newsletter CTA ──────────────────────────── */}
-      <section className="relative w-full overflow-hidden py-24" style={{ backgroundColor: "#0d0d0d" }}>
+      <section className="relative w-full overflow-hidden py-16" style={{ backgroundColor: "#0d0d0d" }}>
         {/* Decorative */}
         <div className="pointer-events-none absolute left-1/4 top-0 h-80 w-80 rounded-full bg-gt-purple/6 blur-[120px]" />
         <div className="pointer-events-none absolute right-1/4 bottom-0 h-60 w-60 rounded-full bg-gt-yellow/5 blur-[100px]" />
