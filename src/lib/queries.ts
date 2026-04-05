@@ -172,6 +172,21 @@ export async function getTopCities(locale: Locale, limit = 20) {
     .map((j) => ({ city: j.city!, count: j._count }));
 }
 
+/** Get companies with domains for logo ticker */
+export async function getCompaniesWithLogos(locale: Locale, limit = 30) {
+  const market = marketForLocale(locale);
+  return db.company.findMany({
+    where: {
+      market,
+      domain: { not: null },
+      jobs: { some: { status: "APPROVED" } },
+    },
+    select: { name: true, domain: true },
+    orderBy: { name: "asc" },
+    take: limit,
+  });
+}
+
 /** Get all approved job slugs for sitemap / generateStaticParams */
 export async function getAllJobSlugs() {
   return db.job.findMany({
