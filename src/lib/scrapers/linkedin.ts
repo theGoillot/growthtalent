@@ -98,7 +98,7 @@ const configs: ScraperSearchConfig[] = [
 
 export const linkedInSource: ScraperSource = {
   name: "LinkedIn",
-  actorId: "BHzefUZlZRKWxkTck",
+  actorId: "curious_coder~linkedin-jobs-scraper",
   configs,
   transform,
 };

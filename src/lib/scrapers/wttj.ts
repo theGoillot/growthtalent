@@ -1,100 +1,103 @@
 /**
  * Welcome to the Jungle scraper transform.
- * Actor: shahidirfan/Jungle-Job-Scraper
+ * Actor: clearpath~welcome-to-the-jungle-jobs-api
  */
 
 import type { IngestPayload } from "@/lib/ingest";
 import { isAgency, isRelevantGrowthRole, type ScraperSource, type ScraperSearchConfig } from "./types";
 
-interface WTTJJob {
-  name?: string;
-  title?: string;
-  office?: string;
-  location?: string;
-  contract_type?: string;
-  contractType?: string;
-  salary?: { min?: number; max?: number; currency?: string } | string;
-  remote?: string;
-  experience?: string;
-  experienceLevel?: string;
-  company_name?: string;
-  companyName?: string;
-  description?: string;
-  url?: string;
-  link?: string;
-  published_at?: string;
-  postedAt?: string;
-}
-
 const CONTRACT_MAP: Record<string, string> = {
+  "full_time": "FULL_TIME",
   "CDI": "FULL_TIME",
+  "part_time": "PART_TIME",
   "CDD": "CONTRACT",
+  "internship": "INTERNSHIP",
   "Stage": "INTERNSHIP",
+  "INTERNSHIP": "INTERNSHIP",
+  "apprenticeship": "INTERNSHIP",
   "Alternance": "INTERNSHIP",
+  "freelance": "FREELANCE",
   "Freelance": "FREELANCE",
-  "Full-time": "FULL_TIME",
-  "Part-time": "PART_TIME",
-  "Internship": "INTERNSHIP",
+  "VIE": "CONTRACT",
+  "temporary": "CONTRACT",
 };
 
 const EXPERIENCE_MAP: Record<string, string> = {
   "junior": "junior",
-  "0-2 years": "junior",
-  "1-3 years": "junior",
-  "3-5 years": "mid",
-  "5-10 years": "senior",
-  "> 10 years": "senior",
+  "0_to_1_years": "junior",
+  "1_to_3_years": "junior",
+  "3_to_5_years": "mid",
+  "5_to_10_years": "senior",
+  "more_than_10_years": "senior",
   "senior": "senior",
-  "manager": "manager",
-  "director": "director",
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function transform(item: any, market: "usa" | "france" | "latam"): IngestPayload | null {
-  const job = item as WTTJJob;
-  const title = job.name || job.title || "";
-  const companyName = job.company_name || job.companyName || "";
+  const title = item.name || "";
+  const companyName = item.organizationName || "";
 
   if (!title || !companyName) return null;
   if (isAgency(companyName)) return null;
   if (!isRelevantGrowthRole(title)) return null;
 
-  const location = job.office || job.location || "";
-  const url = job.url || job.link || "";
+  const url = item.url || item.applyUrl || "";
   if (!url) return null;
 
-  // Parse salary
-  let salaryMin: number | undefined;
-  let salaryMax: number | undefined;
-  let salaryCurrency: string | undefined;
-  if (typeof job.salary === "object" && job.salary) {
-    salaryMin = job.salary.min ?? undefined;
-    salaryMax = job.salary.max ?? undefined;
-    salaryCurrency = job.salary.currency ?? "EUR";
-  }
+  // Parse location from offices array
+  const offices = item.offices || [];
+  const office = offices[0] || {};
+  const city = office.city || office.name || item.organizationHeadquarter || "";
+  const country = office.country || (market === "france" ? "FR" : "");
+  const location = [city, country].filter(Boolean).join(", ");
 
   // Parse remote
-  const remoteStr = (job.remote || "").toLowerCase();
-  const isRemote = remoteStr.includes("full") || remoteStr === "true" || remoteStr === "yes";
+  const remoteStr = (item.remote || "").toLowerCase();
+  const isRemote = remoteStr === "fulltime" || remoteStr === "full" || remoteStr === "true";
 
-  // Parse experience
-  const exp = (job.experience || job.experienceLevel || "").toLowerCase();
+  // Salary from structured fields
+  const salaryMin = item.salaryMin ?? undefined;
+  const salaryMax = item.salaryMax ?? undefined;
+  const salaryCurrency = item.salaryCurrency || (market === "france" ? "EUR" : "USD");
+
+  // Experience level
+  const exp = (item.experienceLevel || "").toLowerCase();
   const seniority = EXPERIENCE_MAP[exp] || undefined;
+
+  // Build description from WTTJ's rich fields
+  const descParts: string[] = [];
+  if (item.summary) descParts.push(`<p>${item.summary}</p>`);
+  if (item.keyMissions) descParts.push(`<h3>Key Missions</h3>${item.keyMissions}`);
+  if (item.profile) descParts.push(`<h3>Profile</h3>${item.profile}`);
+  if (item.recruitmentProcess) descParts.push(`<h3>Recruitment Process</h3>${item.recruitmentProcess}`);
+  if (item.description) descParts.push(item.description);
+  if (item.companySummary) descParts.push(`<h3>About ${companyName}</h3><p>${item.companySummary}</p>`);
+  const description = descParts.join("\n") || item.description || "";
+
+  // Company domain from website
+  const website = item.organizationWebsite || "";
+  let domain: string | undefined;
+  if (website) {
+    try { domain = new URL(website.startsWith("http") ? website : `https://${website}`).hostname.replace("www.", ""); } catch {}
+  }
 
   return {
     title,
     company_name: companyName,
-    description: job.description,
+    company_domain: domain,
+    company_logo: item.organizationLogo || undefined,
+    company_website: website || item.organizationLinkedin || undefined,
+    description,
     location,
-    city: location.split(",")[0]?.trim() || undefined,
-    country: market === "france" ? "FR" : undefined,
+    city: city || undefined,
+    country: country || undefined,
     remote: isRemote,
     salary_min: salaryMin,
     salary_max: salaryMax,
     salary_currency: salaryCurrency,
     seniority,
     url,
-    apply_url: url,
+    apply_url: item.applyUrl || url,
     source: "wttj",
     market,
   };
@@ -102,21 +105,21 @@ function transform(item: any, market: "usa" | "france" | "latam"): IngestPayload
 
 const configs: ScraperSearchConfig[] = [
   // Growth roles in France
-  { queries: ["Growth"], location: "France", market: "france", limit: 50 },
-  { queries: ["Growth Marketing"], location: "Paris", market: "france", limit: 50 },
-  { queries: ["Head of Growth"], location: "France", market: "france", limit: 50 },
-  { queries: ["Acquisition"], location: "France", market: "france", limit: 50 },
-  { queries: ["CRM"], location: "France", market: "france", limit: 30 },
-  { queries: ["SEO"], location: "France", market: "france", limit: 30 },
-  { queries: ["Product Marketing"], location: "France", market: "france", limit: 30 },
-  { queries: ["Performance Marketing"], location: "France", market: "france", limit: 30 },
-  { queries: ["Social Media Manager"], location: "France", market: "france", limit: 30 },
-  { queries: ["Content Marketing"], location: "France", market: "france", limit: 30 },
+  { queries: ["growth"], location: "Paris", market: "france", limit: 50 },
+  { queries: ["head of growth"], location: "France", market: "france", limit: 50 },
+  { queries: ["marketing"], location: "Paris", market: "france", limit: 50 },
+  { queries: ["acquisition"], location: "France", market: "france", limit: 50 },
+  { queries: ["crm"], location: "France", market: "france", limit: 30 },
+  { queries: ["seo"], location: "France", market: "france", limit: 30 },
+  { queries: ["product marketing"], location: "France", market: "france", limit: 30 },
+  { queries: ["performance marketing"], location: "France", market: "france", limit: 30 },
+  { queries: ["social media"], location: "France", market: "france", limit: 30 },
+  { queries: ["content marketing"], location: "France", market: "france", limit: 30 },
 ];
 
 export const wttjSource: ScraperSource = {
   name: "Welcome to the Jungle",
-  actorId: "shahidirfan/Jungle-Job-Scraper",
+  actorId: "clearpath~welcome-to-the-jungle-jobs-api",
   configs,
   transform,
 };
