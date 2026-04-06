@@ -3,6 +3,7 @@ import { getAllJobSlugs, getAllCompanySlugs, getCitiesWithCount } from "@/lib/qu
 import { CATEGORIES } from "@/lib/categories";
 import { CONTENT_SLUGS } from "@/lib/content";
 import { getAllSalarySlugs } from "@/lib/salary-data";
+import { getAllGuideSlugs } from "@/lib/guides";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Ressources / content pages (high SEO value)
   for (const slug of CONTENT_SLUGS) {
     entries.push({ url: `${BASE}/ressources/${slug}`, changeFrequency: "monthly", priority: 0.8 });
+  }
+
+  // English guides (high SEO value)
+  entries.push({ url: `${BASE}/guides`, changeFrequency: "weekly", priority: 0.85 });
+  for (const slug of getAllGuideSlugs()) {
+    entries.push({ url: `${BASE}/guides/${slug}`, changeFrequency: "monthly", priority: 0.85 });
   }
 
   // Company pages
