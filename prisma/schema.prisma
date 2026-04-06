@@ -18,7 +18,11 @@ model Company {
   logoUrl   String?
   about     String?
   size      String?  // "1-10", "11-50", "51-200", "201-500", "500+"
+  companyType String? // "early-stage", "scaleup", "corporate", "agency", "studio", "non-profit"
   industry  String?
+  founded   String?  // "2016"
+  funding   String?  // "$12M Seed" or "$330M Series C"
+  techStack String[] // ["React", "Node.js", "PostgreSQL"]
   market    Market   @default(USA)
   linkedinUrl String?
   isClaimed   Boolean  @default(false)
