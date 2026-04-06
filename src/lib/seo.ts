@@ -126,7 +126,7 @@ export function jobJsonLd(job: {
     : new Date(job.postedAt.getTime() + 60 * 86400000).toISOString().split("T")[0]; // 60 days default
 
   const logoUrl = job.company.logoUrl
-    || (job.company.domain ? `https://img.logo.dev/${job.company.domain}?token=pk_a8C5jGEYR3yhZaKC7wMuvA&size=128&retina=true` : undefined);
+    || (job.company.domain ? `https://www.google.com/s2/favicons?domain=${job.company.domain}&sz=128` : undefined);
 
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",

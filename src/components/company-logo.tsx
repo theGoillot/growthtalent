@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 
 interface CompanyLogoProps {
   name: string;
@@ -14,8 +13,9 @@ interface CompanyLogoProps {
 export function CompanyLogo({ name, logoUrl, domain, size = 48, className = "" }: CompanyLogoProps) {
   const [error, setError] = useState(false);
 
+  // Priority: logoUrl > Google favicon (reliable, free, no auth)
   const src = !error
-    ? logoUrl || (domain ? `https://img.logo.dev/${domain}?token=pk_a8C5jGEYR3yhZaKC7wMuvA&size=128&retina=true` : null)
+    ? logoUrl || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : null)
     : null;
 
   if (!src) {
@@ -30,12 +30,15 @@ export function CompanyLogo({ name, logoUrl, domain, size = 48, className = "" }
   }
 
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       src={src}
       alt={`${name} logo`}
       width={size}
       height={size}
-      className={`shrink-0 rounded-xl border-2 border-black/10 bg-white object-contain ${className}`}
+      loading="lazy"
+      decoding="async"
+      className={`shrink-0 rounded-xl border-2 border-black/10 bg-white object-contain p-1 ${className}`}
       onError={() => setError(true)}
     />
   );

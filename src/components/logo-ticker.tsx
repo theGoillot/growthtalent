@@ -14,7 +14,7 @@ function LogoItem({ company }: { company: { name: string; domain: string | null 
       {company.domain && !imgError ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={`https://img.logo.dev/${company.domain}?token=pk_a8C5jGEYR3yhZaKC7wMuvA&size=64&retina=true`}
+          src={`https://www.google.com/s2/favicons?domain=${company.domain}&sz=128`}
           alt={`${company.name} logo`}
           width={24}
           height={24}

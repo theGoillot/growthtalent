@@ -102,7 +102,7 @@ export function AgentSearch({ jobs, categories, jobsPath }: AgentSearchProps) {
           title: j.title,
           subtitle: j.company.name,
           href: `/${jobsPath}/${j.category}/${j.company.slug}/${j.slug}`,
-          logo: j.company.domain ? `https://img.logo.dev/${j.company.domain}?token=pk_a8C5jGEYR3yhZaKC7wMuvA&size=64&retina=true` : undefined,
+          logo: j.company.domain ? `https://www.google.com/s2/favicons?domain=${j.company.domain}&sz=128` : undefined,
         });
       });
 
@@ -117,7 +117,7 @@ export function AgentSearch({ jobs, categories, jobsPath }: AgentSearchProps) {
           title: j.company.name,
           subtitle: "Company",
           href: `/companies/${j.company.slug}`,
-          logo: j.company.domain ? `https://img.logo.dev/${j.company.domain}?token=pk_a8C5jGEYR3yhZaKC7wMuvA&size=64&retina=true` : undefined,
+          logo: j.company.domain ? `https://www.google.com/s2/favicons?domain=${j.company.domain}&sz=128` : undefined,
         });
       });
 
