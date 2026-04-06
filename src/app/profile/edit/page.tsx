@@ -264,6 +264,20 @@ export default function ProfileEditPage() {
           <div className="rounded-2xl border bg-white p-6 space-y-4">
             <label className="text-sm font-bold uppercase tracking-wider text-gray-400">Identity</label>
 
+            {/* Email — read-only, from LinkedIn */}
+            {session?.user?.email && (
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <input
+                  type="email"
+                  value={session.user.email}
+                  disabled
+                  className="mt-1 w-full rounded-lg border bg-gray-50 px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed"
+                />
+                <p className="mt-1 text-[11px] text-gray-400">From your LinkedIn account. Cannot be changed.</p>
+              </div>
+            )}
+
             <div>
               <label className="text-sm font-medium">Headline</label>
               <input
