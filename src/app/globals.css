@@ -194,6 +194,154 @@ body {
   display: none;
 }
 
+/* ── Guide article prose ─────────────────────────────────── */
+
+.guide-prose {
+  font-size: 17px;
+  line-height: 1.8;
+  color: #374151;
+}
+
+.guide-prose h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #000;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  padding-left: 1rem;
+  border-left: 3px solid #A8AAD8;
+  line-height: 1.25;
+}
+
+.guide-prose h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #000;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.guide-prose p {
+  margin-bottom: 1.25rem;
+}
+
+.guide-prose strong {
+  color: #000;
+  font-weight: 600;
+}
+
+.guide-prose a {
+  color: #A8AAD8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.guide-prose a:hover {
+  color: #000;
+}
+
+.guide-prose ul,
+.guide-prose ol {
+  margin-bottom: 1.5rem;
+  padding-left: 0;
+  list-style: none;
+}
+
+.guide-prose ul li,
+.guide-prose ol li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.guide-prose ul li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.65em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #A8AAD8;
+}
+
+.guide-prose ol {
+  counter-reset: guide-counter;
+}
+
+.guide-prose ol li {
+  counter-increment: guide-counter;
+}
+
+.guide-prose ol li::before {
+  content: counter(guide-counter) ".";
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  color: #A8AAD8;
+  font-size: 0.9em;
+}
+
+/* Blockquotes as speaker quote cards */
+.guide-prose blockquote {
+  margin: 2rem 0;
+  padding: 1.5rem 1.75rem;
+  background: #F8EADD20;
+  border: 1px solid #F8EADD;
+  border-radius: 1rem;
+  font-style: normal;
+  position: relative;
+}
+
+.guide-prose blockquote::before {
+  content: "\201C";
+  position: absolute;
+  top: -0.1rem;
+  left: 1rem;
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  color: #A8AAD8;
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.guide-prose blockquote p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #1f2937;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.guide-prose blockquote p:last-of-type {
+  margin-bottom: 0;
+}
+
+.guide-prose blockquote cite {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 1.5rem;
+  margin-top: 0.75rem;
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.guide-prose blockquote cite::before {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #A8AAD8 0%, #FEB9CE 100%);
+  flex-shrink: 0;
+}
+
 /* ── Rich Job Detail polish ──────────────────────────────── */
 
 .rich-section-enter {
