@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -37,6 +39,7 @@ export async function POST(request: NextRequest) {
 
   // Upload to Supabase Storage
   const buffer = Buffer.from(await file.arrayBuffer());
+  const supabase = getSupabase();
   const { error } = await supabase.storage
     .from("documents") // reusing existing bucket
     .upload(path, buffer, {
