@@ -17,8 +17,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Optional: run a specific source only
+  // Optional filters: run a specific source or market only
   const sourceFilter = request.nextUrl.searchParams.get("source");
+  const marketFilter = request.nextUrl.searchParams.get("market");
 
   const results: Array<{
     source: string;
@@ -36,7 +37,10 @@ export async function GET(request: NextRequest) {
     : ALL_SOURCES;
 
   for (const source of sources) {
-    for (const config of source.configs) {
+    const configs = marketFilter
+      ? source.configs.filter((c) => c.market === marketFilter)
+      : source.configs;
+    for (const config of configs) {
       try {
         console.log(`[Cron] ${source.name}: "${config.queries.join(", ")}" in "${config.location}" (${config.market})`);
 

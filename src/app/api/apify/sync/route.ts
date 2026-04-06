@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { runApifyActor, waitForRun, fetchRunResults } from "@/lib/apify";
 import { ingestJob } from "@/lib/ingest";
 import { linkedInSource } from "@/lib/scrapers/linkedin";
+import { wttjSource } from "@/lib/scrapers/wttj";
+import { wellfoundSource } from "@/lib/scrapers/wellfound";
+import { zipRecruiterSource } from "@/lib/scrapers/ziprecruiter";
+
+const SOURCES = {
+  linkedin: linkedInSource,
+  wttj: wttjSource,
+  wellfound: wellfoundSource,
+  ziprecruiter: zipRecruiterSource,
+};
 
 export const maxDuration = 300;
 
@@ -19,16 +29,18 @@ export async function POST(request: NextRequest) {
     const query = body.query as string | undefined;
     const location = body.location as string | undefined;
     const limit = (body.limit as number) ?? 50;
+    const sourceName = (body.source as keyof typeof SOURCES) ?? "linkedin";
+    const source = SOURCES[sourceName] ?? linkedInSource;
 
     if (!runId) {
       if (!query || !location) {
         return NextResponse.json(
-          { error: "Provide either runId (existing run) or query + location (new run)" },
+          { error: "Provide either runId or query + location" },
           { status: 400 }
         );
       }
 
-      const actorId = (body.actorId as string) ?? "BHzefUZlZRKWxkTck";
+      const actorId = (body.actorId as string) ?? source.actorId;
       runId = await runApifyActor(actorId, [query], location, limit);
 
       const status = await waitForRun(runId);
@@ -37,7 +49,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch and transform using LinkedIn source (default for sync endpoint)
     const items = await fetchRunResults(runId);
     let filtered = 0;
     let created = 0;
@@ -45,7 +56,7 @@ export async function POST(request: NextRequest) {
     let errors = 0;
 
     for (const item of items) {
-      const payload = linkedInSource.transform(item, market);
+      const payload = source.transform(item, market);
       if (!payload) { filtered++; continue; }
       const result = await ingestJob(payload);
       if (result.status === "created") created++;
@@ -55,6 +66,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       runId,
+      source: sourceName,
       market,
       apify: { total: items.length, relevant: items.length - filtered, filtered },
       ingested: { created, duplicates, errors },
