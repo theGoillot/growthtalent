@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 import { classifyCategory } from "@/lib/categories";
 import { moderateJob } from "@/lib/moderate";
+import { enrichCompany } from "@/lib/enrich-company";
 
 export interface IngestPayload {
   title: string;
@@ -128,6 +129,11 @@ export async function ingestJob(payload: IngestPayload): Promise<IngestResult> {
     // 9. AI moderation (fire and forget — don't block ingest)
     moderateJob(job.id).catch((err) => {
       console.error(`Moderation failed for job ${job.id}:`, err);
+    });
+
+    // 10. Auto-enrich company if new (fire and forget)
+    enrichCompany(company.id).catch((err) => {
+      console.error(`Company enrichment failed for ${company.id}:`, err);
     });
 
     return { status: "created", jobId: job.id };

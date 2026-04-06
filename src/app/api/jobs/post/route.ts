@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 import { moderateJob } from "@/lib/moderate";
 import { rateLimit, getRateLimitKey } from "@/lib/rate-limit";
+import { enrichCompany } from "@/lib/enrich-company";
 
 export async function POST(request: NextRequest) {
   // Rate limit: 2 posts per minute per IP
@@ -67,6 +68,11 @@ export async function POST(request: NextRequest) {
     // AI moderation (async, don't block)
     moderateJob(job.id).catch((err) => {
       console.error("Post-job moderation failed:", err);
+    });
+
+    // Auto-enrich company page (async, don't block)
+    enrichCompany(company.id).catch((err) => {
+      console.error("Company enrichment failed:", err);
     });
 
     return NextResponse.json({ ok: true, jobId: job.id });
